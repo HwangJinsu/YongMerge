@@ -1,0 +1,21 @@
+# Ignore everything by default
+*
+
+# Unignore directories (if we need to recurse, but we don't for these flat files)
+# !*/
+
+# Essential Code Files
+!main_app.py
+!ppt_automation.py
+!hwp_automation.py
+!image_utils.py
+
+# Resources
+!PretendardVariable.ttf
+!yongmerge.ico
+
+# Build Configuration
+!yongmerge.spec
+
+# Git Configuration
+!.gitignore
