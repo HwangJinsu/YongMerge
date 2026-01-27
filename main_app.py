@@ -561,7 +561,9 @@ class MailMergeApp(QMainWindow):
     def _ensure_hwp_visibility(self, hwp):
         """한글 COM 인스턴스의 창이 사용자에게 보이도록 강제합니다."""
         try:
-            hwp.Visible = True
+            # 일부 환경에서 Visible 속성 설정 시 오류가 발생하므로 무시
+            if not hwp.Visible:
+                hwp.Visible = True
         except Exception as err:
             print(f"DEBUG: HWP Visible 설정 실패(무시): {err}")
         try:
@@ -570,7 +572,8 @@ class MailMergeApp(QMainWindow):
                 active_window = getattr(windows, "Active_XHwpWindow", None)
                 if active_window:
                     try:
-                        active_window.Visible = True
+                        if not active_window.Visible:
+                            active_window.Visible = True
                     except Exception as active_err:
                         print(f"DEBUG: Active_XHwpWindow.Visible 설정 실패(무시): {active_err}")
                 elif getattr(windows, "Count", 0):
@@ -619,6 +622,12 @@ class MailMergeApp(QMainWindow):
         # 1-based 접근
         for idx in range(1, count + 1):
             _try_item(idx, "1-based")
+
+        # 만약 문서를 하나도 못 찾았다면 잠시 대기 후 재시도 (HWP 초기화 지연 대응)
+        if not documents and count > 0:
+            time.sleep(0.5)
+            for idx in range(count):
+                _try_item(idx, "retry-0-based")
 
         # Enumerator 접근
         enum_provider = getattr(docs, "_NewEnum", None)
@@ -745,8 +754,8 @@ class MailMergeApp(QMainWindow):
         # 기존 HWP 인스턴스가 유효한지 확인
         if self.hwp_app is not None:
             try:
-                # 가벼운 속성 접근으로 연결 상태 확인
-                _ = self.hwp_app.Visible
+                # 가벼운 속성 접근으로 연결 상태 확인 (Visible 대신 XHwpWindows 사용이 더 안정적)
+                _ = self.hwp_app.XHwpWindows.Count
             except Exception:
                 print("DEBUG: 기존 HWP 인스턴스 연결 끊김 감지 - 참조 초기화")
                 self.hwp_app = None
@@ -1100,8 +1109,8 @@ class MailMergeApp(QMainWindow):
         # 기존 HWP 인스턴스가 유효한지 확인
         if self.hwp_app is not None:
             try:
-                # 가벼운 속성 접근으로 연결 상태 확인
-                _ = self.hwp_app.Visible
+                # 가벼운 속성 접근으로 연결 상태 확인 (Visible 대신 XHwpWindows 사용이 더 안정적)
+                _ = self.hwp_app.XHwpWindows.Count
             except Exception:
                 print("DEBUG: 기존 HWP 인스턴스 연결 끊김 감지 - 참조 초기화")
                 self.hwp_app = None
@@ -1177,7 +1186,8 @@ class MailMergeApp(QMainWindow):
                 self._bring_window_to_front(hwnd)
                 time.sleep(0.1)
 
-            # 기본 새 문서가 남아 있으면 닫기
+            # 기본 새 문서가 남아 있으면 닫기 (위험하므로 비활성화)
+            """
             for extra_doc in self._enumerate_hwp_documents(hwp):
                 if extra_doc is doc:
                     continue
@@ -1192,7 +1202,7 @@ class MailMergeApp(QMainWindow):
                         print("DEBUG: 기본 새 문서 닫기 완료")
                     except Exception as close_err:
                         print(f"DEBUG: 기본 새 문서 닫기 실패(무시): {close_err}")
-
+            """
             success = True
         else:
             print("DEBUG: COM으로 템플릿 문서를 제어하지 못했습니다.")
