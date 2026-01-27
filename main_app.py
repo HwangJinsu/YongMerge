@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLineEdit, 
     QHBoxLayout, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView, 
     QFileDialog, QMessageBox, QLabel, QSizePolicy, QScrollArea, QFrame, QInputDialog,
-    QProgressDialog
+    QProgressDialog, QMenu, QAction
 )
 from PyQt5.QtCore import Qt, QMimeData, QEvent, pyqtSignal, QThread
 from PyQt5.QtGui import QDrag, QPixmap, QKeySequence, QFontDatabase, QFont, QPalette, QColor, QBrush
@@ -139,6 +139,11 @@ class EnhancedTableWidget(QTableWidget):
     rowsChangedSignal = pyqtSignal()
     imageColumnDoubleClicked = pyqtSignal(int, int)  # row, column 시그널 추가
     pastedSignal = pyqtSignal() # 붙여넣기 완료 시그널 추가
+    
+    # 컨텍스트 메뉴용 시그널
+    deleteRowsSignal = pyqtSignal()
+    deleteColumnsSignal = pyqtSignal()
+    addRowSignal = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -156,6 +161,55 @@ class EnhancedTableWidget(QTableWidget):
         self.cellChanged.connect(self._on_cell_changed)
         self.dataframe_ref = None
         self.cellDoubleClicked.connect(self._on_cell_double_clicked)
+        
+        # 컨텍스트 메뉴 설정
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_cell_context_menu)
+        
+        # 헤더 컨텍스트 메뉴 설정
+        self.horizontalHeader().setContextMenuPolicy(Qt.CustomContextMenu)
+        self.horizontalHeader().customContextMenuRequested.connect(self.show_horizontal_header_context_menu)
+        self.verticalHeader().setContextMenuPolicy(Qt.CustomContextMenu)
+        self.verticalHeader().customContextMenuRequested.connect(self.show_vertical_header_context_menu)
+
+    def show_cell_context_menu(self, pos):
+        menu = QMenu(self)
+        
+        copy_action = menu.addAction("✂️ 복사 (Ctrl+C)")
+        copy_action.triggered.connect(self.copy_selected_cells)
+        
+        paste_action = menu.addAction("📋 붙여넣기 (Ctrl+V)")
+        paste_action.triggered.connect(self.paste_to_selected_cells)
+        
+        delete_action = menu.addAction("🗑️ 내용 삭제 (Del)")
+        delete_action.triggered.connect(self.delete_selected_cells)
+        
+        menu.addSeparator()
+        
+        add_row_action = menu.addAction("➕ 행 추가")
+        add_row_action.triggered.connect(self.addRowSignal.emit)
+        
+        del_row_action = menu.addAction("🗑️ 선택된 [행] 삭제")
+        del_row_action.triggered.connect(self.deleteRowsSignal.emit)
+        
+        del_col_action = menu.addAction("🗑️ 선택된 [열] 삭제")
+        del_col_action.triggered.connect(self.deleteColumnsSignal.emit)
+        
+        menu.exec_(self.viewport().mapToGlobal(pos))
+
+    def show_horizontal_header_context_menu(self, pos):
+        menu = QMenu(self)
+        del_col_action = menu.addAction("🗑️ 이 [열] 삭제")
+        del_col_action.triggered.connect(self.deleteColumnsSignal.emit)
+        menu.exec_(self.horizontalHeader().mapToGlobal(pos))
+
+    def show_vertical_header_context_menu(self, pos):
+        menu = QMenu(self)
+        add_row_action = menu.addAction("➕ 여기에 행 추가")
+        add_row_action.triggered.connect(self.addRowSignal.emit)
+        del_row_action = menu.addAction("🗑️ 이 [행] 삭제")
+        del_row_action.triggered.connect(self.deleteRowsSignal.emit)
+        menu.exec_(self.verticalHeader().mapToGlobal(pos))
 
     def setDataFrame(self, dataframe):
          self.dataframe_ref = dataframe
@@ -337,6 +391,12 @@ class MailMergeApp(QMainWindow):
         self.data_table.rowsChangedSignal.connect(self.handle_table_rows_changed)
         self.data_table.imageColumnDoubleClicked.connect(self.on_image_cell_double_clicked)
         self.data_table.pastedSignal.connect(self.on_pasted) # 시그널 연결 수정
+        
+        # 컨텍스트 메뉴 시그널 연결
+        self.data_table.addRowSignal.connect(self.add_row)
+        self.data_table.deleteRowsSignal.connect(self.delete_selected_rows)
+        self.data_table.deleteColumnsSignal.connect(self.delete_selected_columns)
+        
         self.check_hwp_registry()
 
     def save_state(self):
