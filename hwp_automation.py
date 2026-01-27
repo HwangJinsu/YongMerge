@@ -272,24 +272,43 @@ def remove_all_fields(hwp, progress_callback=None):
 
         total_base = len(base_fields)
         for i, field_name in enumerate(base_fields):
-            # 진행률 업데이트 (필드 삭제 작업이 오래 걸릴 수 있으므로 95-99% 구간 할당)
             if progress_callback:
                 progress_callback.emit(95 + int((i / total_base) * 4))
 
-            # 해당 이름을 가진 필드가 문서에 없을 때까지 반복 삭제
-            # MoveToField(이름, 다음찾기, 시작부터, 전체선택)
-            count = 0
-            while hwp.MoveToField(field_name, True, True, True) and count < 1000:
-                try:
-                    hwp.HAction.Run("DeleteField")
-                    count += 1
-                except:
-                    break
+            # 1. 우선 DeleteField(이름, 타입) 메서드 시도 (가장 깔끔함)
+            # 타입 2: 누름틀. 보통 이 호출로 해당 이름을 가진 모든 인스턴스가 삭제됨.
+            try:
+                hwp.DeleteField(field_name, 2)
+            except Exception as e:
+                print(f"DEBUG: DeleteField('{field_name}', 2) 실패: {e}")
+                
+                # 2. 폴백: MoveToField + DeleteField 액션 방식
+                # 매개변수 개수 오류 방지를 위해 유연하게 시도
+                count = 0
+                while count < 100: # 무한루프 방지
+                    found = False
+                    try:
+                        # 4개 매개변수 시도
+                        found = hwp.MoveToField(field_name, True, True, True)
+                    except:
+                        try:
+                            # 1개 매개변수 시도
+                            found = hwp.MoveToField(field_name)
+                        except:
+                            found = False
+                    
+                    if not found: break
+                    
+                    try:
+                        hwp.HAction.Run("DeleteField")
+                        count += 1
+                    except:
+                        break
             
-            if count > 0:
-                print(f"DEBUG: 필드 '{field_name}' 총 {count}개 인스턴스 삭제 완료")
+            # 중간중간 메시지 처리 시간 부여
+            if i % 10 == 0:
+                time.sleep(0.01)
         
-        # 커서를 문서 처음으로 복귀
         hwp.MovePos(0)
         print("DEBUG: 모든 누름틀 필드 삭제 작업 완료")
     except Exception as e:
@@ -297,15 +316,7 @@ def remove_all_fields(hwp, progress_callback=None):
 
 
 def process_hwp_template(dataframe, template_file_path, output_type, progress_callback, save_path=None):
-    """HWP 템플릿을 처리합니다.
-
-    Args:
-        dataframe: 데이터프레임
-        template_file_path: 템플릿 파일 경로
-        output_type: 출력 타입 ('individual' 또는 'combined')
-        progress_callback: 진행률 콜백
-        save_path: 저장 경로 (combined일 때 필수)
-    """
+    """HWP 템플릿을 처리합니다."""
     hwp = None
 
     try:
@@ -313,18 +324,11 @@ def process_hwp_template(dataframe, template_file_path, output_type, progress_ca
         if hwp is None:
             raise Exception("한글 COM 객체를 가져오는 데 실패했습니다.")
 
-        # 템플릿 파일 검증
         if not os.path.exists(template_file_path):
             raise Exception(f"템플릿 파일이 존재하지 않습니다: {template_file_path}")
 
-        if not os.access(template_file_path, os.R_OK):
-            raise Exception(f"템플릿 파일을 읽을 수 없습니다: {template_file_path}")
-
-        # 파일 형식 확인
         file_format = get_file_format(template_file_path)
-        print(f"DEBUG: 파일 형식: {file_format} ({os.path.splitext(template_file_path)[1]})")
-
-        # 처리 타입에 따른 분기
+        
         if output_type == 'individual':
             return process_individual(hwp, dataframe, template_file_path, progress_callback)
         elif output_type == 'combined':
@@ -341,20 +345,28 @@ def process_hwp_template(dataframe, template_file_path, output_type, progress_ca
     finally:
         if hwp:
             try:
-                # 열려있는 문서가 있다면 모두 닫기 (파일 핸들 해제 보장)
+                print("DEBUG: HWP 인스턴스 종료 시작...")
+                # 1. 열려있는 모든 문서 닫기
                 try:
-                    while hwp.XHwpDocuments.Count > 0:
-                        hwp.XHwpDocuments.Item(0).Close(1) # 1: 저장하지 않고 닫기
+                    count = hwp.XHwpDocuments.Count
+                    for _ in range(count):
+                        hwp.XHwpDocuments.Item(0).Close(1) # 무조건 저장 안 함
                         time.sleep(0.1)
                 except:
                     pass
                 
-                hwp.Quit()
-                # 프로세스가 완전히 종료되고 파일 락이 풀릴 시간을 충분히 부여
+                # 2. 인스턴스 종료
+                try:
+                    hwp.Quit()
+                except:
+                    # Quit 실패 시 프로세스 강제 종료 고려 가능하지만 우선 무시
+                    pass
+                
+                # 3. 파일 락 해제를 위한 충분한 대기
                 time.sleep(1.5)
-                print("DEBUG: HWP 인스턴스 종료 및 파일 락 해제 완료")
+                print("DEBUG: HWP 인스턴스 종료 완료")
             except Exception as e:
-                print(f"DEBUG: HWP 종료 중 오류 (무시 가능): {e}")
+                print(f"DEBUG: HWP 종료 시퀀스 중 오류 (무시): {e}")
 
 
 def process_individual(hwp, dataframe, template_file_path, progress_callback):
