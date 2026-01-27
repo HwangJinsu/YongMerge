@@ -157,6 +157,10 @@ class EnhancedTableWidget(QTableWidget):
          self.dataframe_ref = dataframe
          self.update_table_from_dataframe()
 
+    def updateDataFrameRef(self, dataframe):
+        """테이블 다시 그리기 없이 DataFrame 참조만 업데이트 (행 추가/삭제 시 사용)"""
+        self.dataframe_ref = dataframe
+
     def selectionChanged(self, selected, deselected):
         super().selectionChanged(selected, deselected)
         black_brush = QBrush(QColor(0, 0, 0))
@@ -198,15 +202,9 @@ class EnhancedTableWidget(QTableWidget):
         """셀 변경 이벤트 - 이미지 열은 표시 텍스트가 아닌 실제 경로만 변경"""
         item = self.item(row, column)
         if item:
-            # 이미지 열인 경우 표시 텍스트(📷 파일명)가 아니라 실제 경로를 확인
-            col_name = self.horizontalHeaderItem(column).text()
-            if col_name == "이미지":
-                # 이미지 열의 경우 DataFrame에 저장된 실제 경로를 유지
-                # (표시 텍스트는 무시하고 DataFrame의 값을 그대로 유지)
-                return
-            else:
-                # 일반 텍스트 열은 그대로 시그널 발생
-                self.cellDataChangedSignal.emit(row, column, item.text())
+            # 이미지 열도 사용자가 직접 경로를 수정할 수 있도록 허용 (이전에는 차단됨)
+            # 일반 텍스트 열 및 이미지 열 모두 시그널 발생
+            self.cellDataChangedSignal.emit(row, column, item.text())
 
     def _on_cell_double_clicked(self, row, column):
         """셀 더블클릭 이벤트 핸들러"""
@@ -969,6 +967,9 @@ class MailMergeApp(QMainWindow):
             self.dataframe = pd.concat([self.dataframe, new_rows], ignore_index=True)
         elif table_rows < df_rows:
             self.dataframe = self.dataframe.iloc[:table_rows].reset_index(drop=True)
+        
+        # DataFrame 객체가 변경되었으므로 테이블 위젯의 참조도 업데이트
+        self.data_table.updateDataFrameRef(self.dataframe)
 
     def add_row(self):
         insert_pos = self.data_table.currentRow() + 1 if self.data_table.selectedIndexes() else self.data_table.rowCount()
