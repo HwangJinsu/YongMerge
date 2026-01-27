@@ -262,6 +262,7 @@ def remove_all_fields(hwp):
     """문서 내의 모든 누름틀(Click-Here) 필드를 삭제합니다. (내용은 유지)"""
     try:
         # 모든 누름틀 필드 목록 가져오기 (인덱스 포함)
+        # 1: 인덱스 포함, 2: 누름틀
         field_list = hwp.GetFieldList(1, 2)
         if not field_list:
             print("DEBUG: 삭제할 누름틀 필드가 없습니다.")
@@ -270,22 +271,17 @@ def remove_all_fields(hwp):
         fields = field_list.split("\x02")
         print(f"DEBUG: 총 {len(fields)}개의 누름틀 필드 삭제 시도")
 
-        # 필드 하나씩 찾아가며 삭제 (가장 확실한 방법)
+        # 필드 삭제 작업
         for field in fields:
             if not field: continue
             try:
-                # 1. 해당 필드로 커서 이동 (전체 선택 상태)
-                if hwp.MoveToField(field, True, True, True):
-                    # 2. 누름틀 지우기 액션 실행 (컨테이너 삭제, 내용은 보존)
-                    hwp.HAction.Run("DeleteField")
-                else:
-                    # 이동 실패 시 직접 메서드 호출 시도
-                    hwp.DeleteField(field)
+                # DeleteField 메서드는 (필드이름, 타입) 2개의 매개변수가 필요함
+                # 타입 2: 누름틀(Click-here)
+                hwp.DeleteField(field, 2)
             except Exception as e:
-                print(f"DEBUG: 필드 '{field}' 삭제 중 오류: {e}")
+                # 특정 필드 삭제 실패 시 로그만 남기고 계속 진행
+                print(f"DEBUG: 필드 '{field}' 삭제 중 오류 (무시): {e}")
         
-        # 커서를 문서 처음으로 복귀
-        hwp.MovePos(0)
         print("DEBUG: 모든 누름틀 필드 삭제 작업 완료")
     except Exception as e:
         print(f"DEBUG: 전체 필드 삭제 로직 중 오류: {e}")
@@ -336,10 +332,18 @@ def process_hwp_template(dataframe, template_file_path, output_type, progress_ca
     finally:
         if hwp:
             try:
-                hwp.Clear(1)
-                time.sleep(0.2)
+                # 열려있는 문서가 있다면 모두 닫기 (파일 핸들 해제 보장)
+                try:
+                    while hwp.XHwpDocuments.Count > 0:
+                        hwp.XHwpDocuments.Item(0).Close(1) # 1: 저장하지 않고 닫기
+                        time.sleep(0.1)
+                except:
+                    pass
+                
                 hwp.Quit()
-                print("DEBUG: HWP 인스턴스 종료 완료")
+                # 프로세스가 완전히 종료되고 파일 락이 풀릴 시간을 충분히 부여
+                time.sleep(0.8)
+                print("DEBUG: HWP 인스턴스 종료 및 파일 락 해제 완료")
             except Exception as e:
                 print(f"DEBUG: HWP 종료 중 오류 (무시 가능): {e}")
 
