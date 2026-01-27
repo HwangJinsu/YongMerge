@@ -325,12 +325,47 @@ class MailMergeApp(QMainWindow):
         self.template_file_path = None
         self.worker = None
         self.hwp_app = None
+        
+        # Undo/Redo stacks
+        self.history_stack = []
+        self.redo_stack = []
+        self._block_history = False
+
         self.initUI()
         self.load_initial_data()
         self.data_table.cellDataChangedSignal.connect(self.update_dataframe_from_cell)
         self.data_table.rowsChangedSignal.connect(self.handle_table_rows_changed)
         self.data_table.imageColumnDoubleClicked.connect(self.on_image_cell_double_clicked)
+        self.data_table.pastedSignal.connect(self.on_pasted) # 시그널 연결 수정
         self.check_hwp_registry()
+
+    def save_state(self):
+        """현재 데이터 상태를 히스토리에 저장 (Undo용)"""
+        if self._block_history: return
+        # 깊은 복사를 통해 현재 상태 저장
+        self.history_stack.append(self.dataframe.copy())
+        self.redo_stack.clear() # 새로운 작업이 들어오면 Redo 스택 초기화
+        # 히스토리 크기 제한 (최근 50개)
+        if len(self.history_stack) > 50:
+            self.history_stack.pop(0)
+
+    def undo(self):
+        if not self.history_stack: return
+        self._block_history = True
+        self.redo_stack.append(self.dataframe.copy())
+        self.dataframe = self.history_stack.pop()
+        self.data_table.setDataFrame(self.dataframe)
+        self._block_history = False
+        self.update_generate_button_state()
+
+    def redo(self):
+        if not self.redo_stack: return
+        self._block_history = True
+        self.history_stack.append(self.dataframe.copy())
+        self.dataframe = self.redo_stack.pop()
+        self.data_table.setDataFrame(self.dataframe)
+        self._block_history = False
+        self.update_generate_button_state()
 
     def check_hwp_registry(self):
         if not is_windows: return
@@ -426,6 +461,15 @@ class MailMergeApp(QMainWindow):
 
         control_row = QHBoxLayout()
         control_row.setSpacing(12)
+        
+        self.undo_button = self._make_secondary_button("↩️ Undo")
+        self.undo_button.clicked.connect(self.undo)
+        control_row.addWidget(self.undo_button)
+
+        self.redo_button = self._make_secondary_button("↪️ Redo")
+        self.redo_button.clicked.connect(self.redo)
+        control_row.addWidget(self.redo_button)
+
         self.add_row_button = self._make_secondary_button("➕ 행 추가")
         self.add_row_button.clicked.connect(self.add_row)
         control_row.addWidget(self.add_row_button)
@@ -909,11 +953,17 @@ class MailMergeApp(QMainWindow):
              self.dataframe = pd.DataFrame(index=range(5))
         self.data_table.update_table_from_dataframe()
 
+    def on_pasted(self):
+        """붙여넣기 완료 시 호출되는 콜백"""
+        self.save_state()
+        self.update_generate_button_state()
+
     def create_field(self, field_name=None, from_input=True):
         if from_input:
             field_name = self.field_name_input.text().strip()
         if not field_name or field_name in self.dataframe.columns: return
 
+        self.save_state()
         # DataFrame에 열 추가 (행이 없으면 최소 5개 행 생성)
         if len(self.dataframe) == 0:
             self.dataframe = pd.DataFrame({field_name: [None] * 5})
@@ -942,6 +992,7 @@ class MailMergeApp(QMainWindow):
 
     def remove_field(self, field_name):
         """필드 삭제 (DataFrame과 UI에서 모두 제거)"""
+        self.save_state()
         # DataFrame에서 열 삭제
         if field_name in self.dataframe.columns:
             self.dataframe = self.dataframe.drop(columns=[field_name])
@@ -1040,6 +1091,7 @@ class MailMergeApp(QMainWindow):
                  print(f"DEBUG: 이미지 열의 표시 텍스트 업데이트 무시: {value}")
                  return
 
+        self.save_state()
         self.dataframe.at[row, col_name] = value if value else None
         self.update_generate_button_state()
 
@@ -1048,34 +1100,60 @@ class MailMergeApp(QMainWindow):
          self.update_generate_button_state()
 
     def sync_dataframe_with_table_rows(self):
+        """UI 테이블과 DataFrame의 행 개수 동기화 (최종 방어 로직)"""
         table_rows = self.data_table.rowCount()
         df_rows = len(self.dataframe)
+        
         if table_rows > df_rows:
+            # 부족한 행만큼 끝에 추가
             new_rows = pd.DataFrame([([None] * len(self.dataframe.columns))] * (table_rows - df_rows), columns=self.dataframe.columns)
             self.dataframe = pd.concat([self.dataframe, new_rows], ignore_index=True)
         elif table_rows < df_rows:
+            # 넘치는 행만큼 뒤에서 삭제
             self.dataframe = self.dataframe.iloc[:table_rows].reset_index(drop=True)
         
-        # DataFrame 객체가 변경되었으므로 테이블 위젯의 참조도 업데이트
         self.data_table.updateDataFrameRef(self.dataframe)
 
     def add_row(self):
+        self.save_state()
         insert_pos = self.data_table.currentRow() + 1 if self.data_table.selectedIndexes() else self.data_table.rowCount()
+        
+        # 1. UI 테이블에 행 추가
         self.data_table.insertRow(insert_pos)
-        self.sync_dataframe_with_table_rows()
+        
+        # 2. DataFrame에 빈 행 삽입 (기존의 sync 방식은 끝에만 추가해서 버그 발생했음)
+        new_row_df = pd.DataFrame([([None] * len(self.dataframe.columns))], columns=self.dataframe.columns)
+        upper = self.dataframe.iloc[:insert_pos]
+        lower = self.dataframe.iloc[insert_pos:]
+        self.dataframe = pd.concat([upper, new_row_df, lower]).reset_index(drop=True)
+        
+        # 3. 테이블 위젯의 참조 업데이트 (동기화 보장)
+        self.data_table.updateDataFrameRef(self.dataframe)
         self.update_generate_button_state()
 
     def delete_selected_rows(self):
-        rows_to_delete = sorted(list(set(index.row() for index in self.data_table.selectedIndexes())), reverse=True)
-        if not rows_to_delete: return
+        selected_indexes = self.data_table.selectedIndexes()
+        if not selected_indexes: return
+        
+        self.save_state()
+        # 행 번호가 바뀌지 않도록 역순 정렬하여 삭제
+        rows_to_delete = sorted(list(set(index.row() for index in selected_indexes)), reverse=True)
+        
         for row in rows_to_delete:
+            # UI에서 삭제
             self.data_table.removeRow(row)
-        self.sync_dataframe_with_table_rows()
+            # DataFrame에서 실제 데이터 삭제
+            self.dataframe = self.dataframe.drop(self.dataframe.index[row])
+        
+        self.dataframe = self.dataframe.reset_index(drop=True)
+        # 테이블 위젯의 참조 업데이트
+        self.data_table.updateDataFrameRef(self.dataframe)
         self.update_generate_button_state()
 
     def upload_xlsx(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "XLSX 파일 업로드", "", "Excel Files (*.xlsx)")
         if not file_path: return
+        self.save_state()
         try:
             uploaded_df = pd.read_excel(file_path).astype(object).where(pd.notna, None)
             for col_name in uploaded_df.columns:
@@ -1366,6 +1444,7 @@ class MailMergeApp(QMainWindow):
         if not valid_images:
             return
 
+        self.save_state()
         # Step 1: '이미지' 필드가 없으면 자동 생성
         image_field_name = "이미지"
         if image_field_name not in self.dataframe.columns:
