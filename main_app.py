@@ -135,6 +135,7 @@ class EnhancedTableWidget(QTableWidget):
     cellDataChangedSignal = pyqtSignal(int, int, str)
     rowsChangedSignal = pyqtSignal()
     imageColumnDoubleClicked = pyqtSignal(int, int)  # row, column 시그널 추가
+    pastedSignal = pyqtSignal() # 붙여넣기 완료 시그널 추가
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -249,7 +250,21 @@ class EnhancedTableWidget(QTableWidget):
         all_rows_data = []
         for selected_range in selected_ranges:
             for row in range(selected_range.topRow(), selected_range.bottomRow() + 1):
-                row_data = [self.item(row, col).text() if self.item(row, col) else "" for col in range(selected_range.leftColumn(), selected_range.rightColumn() + 1)]
+                row_data = []
+                for col in range(selected_range.leftColumn(), selected_range.rightColumn() + 1):
+                    # 데이터프레임이 있으면 실제 값을 복사
+                    if self.dataframe_ref is not None:
+                        col_name = self.horizontalHeaderItem(col).text()
+                        val = self.dataframe_ref.at[row, col_name]
+                        if pd.isna(val):
+                            val = ""
+                        else:
+                            val = str(val)
+                        row_data.append(val)
+                    else:
+                        # 데이터프레임이 없으면 화면 텍스트 복사 (폴백)
+                        item = self.item(row, col)
+                        row_data.append(item.text() if item else "")
                 all_rows_data.append("\t".join(row_data))
         QApplication.clipboard().setText("\n".join(all_rows_data))
 
@@ -259,20 +274,45 @@ class EnhancedTableWidget(QTableWidget):
         rows_data = clipboard_text.split('\n')
         selected_items = self.selectedItems()
         if not selected_items: return
+        
         top_row = min(item.row() for item in selected_items)
         left_col = min(item.column() for item in selected_items)
+        
+        # 시그널 차단 (대량 업데이트 효율성 및 중복 시그널 방지)
         self.cellChanged.disconnect(self._on_cell_changed)
-        for r_offset, row_data in enumerate(rows_data):
-            cells_data = row_data.split('\t')
-            for c_offset, cell_data in enumerate(cells_data):
-                target_row, target_col = top_row + r_offset, left_col + c_offset
-                if target_row < self.rowCount() and target_col < self.columnCount():
-                    new_item = QTableWidgetItem(cell_data)
-                    self.setItem(target_row, target_col, new_item)
-                    if self.dataframe_ref is not None:
+        
+        try:
+            for r_offset, row_data in enumerate(rows_data):
+                if not row_data: continue
+                cells_data = row_data.split('\t')
+                for c_offset, cell_data in enumerate(cells_data):
+                    target_row, target_col = top_row + r_offset, left_col + c_offset
+                    if target_row < self.rowCount() and target_col < self.columnCount():
                         col_name = self.horizontalHeaderItem(target_col).text()
-                        self.dataframe_ref.at[target_row, col_name] = cell_data if cell_data else None
-        self.cellChanged.connect(self._on_cell_changed)
+                        
+                        # 실제 저장할 값
+                        actual_value = cell_data if cell_data else None
+                        # 화면에 표시할 값
+                        display_value = cell_data
+                        
+                        # 이미지 열 처리
+                        if col_name == "이미지" and actual_value:
+                            import image_utils
+                            # 값이 이미지 파일 경로인 경우 표시 이름 변경
+                            if image_utils.is_image_file(actual_value):
+                                display_value = image_utils.get_image_display_name(actual_value)
+                        
+                        # 테이블 위젯 아이템 업데이트
+                        new_item = QTableWidgetItem(display_value if display_value else "")
+                        self.setItem(target_row, target_col, new_item)
+                        
+                        # 데이터프레임 업데이트
+                        if self.dataframe_ref is not None:
+                            self.dataframe_ref.at[target_row, col_name] = actual_value
+        finally:
+            self.cellChanged.connect(self._on_cell_changed)
+            # 붙여넣기 완료 시그널 발생 (버튼 상태 갱신 등)
+            self.pastedSignal.emit()
 
 # Main app class
 class MailMergeApp(QMainWindow):
@@ -419,6 +459,9 @@ class MailMergeApp(QMainWindow):
         table_palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
         self.data_table.setPalette(table_palette)
         main_layout.addWidget(self.data_table)
+        
+        # 붙여넣기 시그널 연결
+        self.data_table.pastedSignal.connect(self.update_generate_button_state)
 
     def _styled_label(self, text, css_class=None):
         label = QLabel(text)
