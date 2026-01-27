@@ -586,13 +586,22 @@ class MailMergeApp(QMainWindow):
             print(f"DEBUG: HWP 창 가시성 확보 실패(무시): {err}")
 
     def _enumerate_hwp_documents(self, hwp):
-        docs = getattr(hwp, "XHwpDocuments", None)
+        try:
+            docs = getattr(hwp, "XHwpDocuments", None)
+        except Exception as e:
+            print(f"DEBUG: HWP XHwpDocuments 접근 실패 (COM 연결 끊김 추정): {e}")
+            return []
+
         if not docs:
             print("DEBUG: HWP XHwpDocuments 정보 없음")
             return []
 
         documents = []
-        count = getattr(docs, "Count", 0) or 0
+        try:
+            count = getattr(docs, "Count", 0) or 0
+        except Exception:
+            count = 0
+        
         print(f"DEBUG: HWP 열린 문서 수 추정: {count}")
 
         def _try_item(index, note):
@@ -732,6 +741,15 @@ class MailMergeApp(QMainWindow):
             coinitialized = True
         except Exception:
             pass
+
+        # 기존 HWP 인스턴스가 유효한지 확인
+        if self.hwp_app is not None:
+            try:
+                # 가벼운 속성 접근으로 연결 상태 확인
+                _ = self.hwp_app.Visible
+            except Exception:
+                print("DEBUG: 기존 HWP 인스턴스 연결 끊김 감지 - 참조 초기화")
+                self.hwp_app = None
 
         hwp = self.hwp_app
         if hwp is None:
@@ -1078,6 +1096,15 @@ class MailMergeApp(QMainWindow):
             coinitialized = True
         except Exception:
             pass
+
+        # 기존 HWP 인스턴스가 유효한지 확인
+        if self.hwp_app is not None:
+            try:
+                # 가벼운 속성 접근으로 연결 상태 확인
+                _ = self.hwp_app.Visible
+            except Exception:
+                print("DEBUG: 기존 HWP 인스턴스 연결 끊김 감지 - 참조 초기화")
+                self.hwp_app = None
 
         hwp = self.hwp_app
         if hwp is None:
