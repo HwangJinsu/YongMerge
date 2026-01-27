@@ -327,25 +327,36 @@ def process_individual(hwp, dataframe, template_file_path, progress_callback):
             if progress_callback:
                 progress_callback.emit(int(((index + 1) / total_rows) * 100))
 
-            # 기존 문서 닫기
+            # 기존 문서 닫기 및 인스턴스 유효성 체크
             try:
+                _ = hwp.XHwpWindows.Count
                 hwp.Clear(1)
-                time.sleep(0.1)
-            except:
-                pass
+                time.sleep(0.2)
+            except Exception as e:
+                print(f"DEBUG: HWP 인스턴스 이상 감지 ({e}), 재할당 시도")
+                try:
+                    hwp = get_hwp_instance()
+                except:
+                    pass
 
             # 문서 열기 (재시도 로직 추가)
             abs_template = os.path.abspath(template_file_path)
             opened = False
             for attempt in range(3):
                 try:
+                    _ = hwp.XHwpWindows.Count
                     result = hwp.Open(abs_template, file_format, "")
                     if result:
                         opened = True
                         break
                 except Exception as open_err:
                     print(f"DEBUG: HWP Open 시도 {attempt+1} 실패: {open_err}")
-                time.sleep(0.5)
+                    if "-2147417851" in str(open_err) or "RPC" in str(open_err):
+                        try:
+                            hwp = get_hwp_instance()
+                        except:
+                            pass
+                time.sleep(0.8)
 
             if not opened:
                 raise Exception(f"템플릿 파일을 열 수 없습니다 (3회 시도): {template_file_path}")
@@ -397,18 +408,26 @@ def process_combined_safe(hwp, dataframe, template_file_path, progress_callback,
                 if progress_callback:
                     progress_callback.emit(int(((index + 1) / total_rows) * 50))
 
-                # 기존 문서 닫기
+                # 기존 문서 닫기 및 인스턴스 유효성 체크
                 try:
+                    # 가벼운 호출로 인스턴스 생존 확인
+                    _ = hwp.XHwpWindows.Count
                     hwp.Clear(1)
-                    time.sleep(0.2)
-                except:
-                    pass
+                    time.sleep(0.3)
+                except Exception as e:
+                    print(f"DEBUG: HWP 인스턴스 이상 감지 ({e}), 재할당 시도")
+                    try:
+                        hwp = get_hwp_instance()
+                    except:
+                        pass
 
                 # 문서 열기 (재시도 로직 추가하여 안정성 확보)
                 abs_template = os.path.abspath(template_file_path)
                 opened = False
                 for attempt in range(3):
                     try:
+                        # 매 시도 전 인스턴스 확인
+                        _ = hwp.XHwpWindows.Count
                         result = hwp.Open(abs_template, file_format, "")
                         if result:
                             opened = True
@@ -417,8 +436,15 @@ def process_combined_safe(hwp, dataframe, template_file_path, progress_callback,
                             print(f"DEBUG: HWP Open 시도 {attempt+1} 반환값 False")
                     except Exception as open_err:
                         print(f"DEBUG: HWP Open 시도 {attempt+1} 중 예외: {open_err}")
+                        # 서버 예외 오류 발생 시 인스턴스 교체 시도
+                        if "-2147417851" in str(open_err) or "RPC" in str(open_err):
+                            try:
+                                print("DEBUG: 치명적 COM 오류 감지 - HWP 인스턴스 재시작")
+                                hwp = get_hwp_instance()
+                            except:
+                                pass
                     
-                    time.sleep(0.5) # 실패 시 잠시 대기
+                    time.sleep(0.8) # 실패 시 충분히 대기
 
                 if not opened:
                     raise Exception(f"템플릿 파일을 열 수 없습니다 (3회 시도): {template_file_path}")

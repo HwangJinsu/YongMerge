@@ -885,6 +885,7 @@ class MailMergeApp(QMainWindow):
                 try:
                     win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
                     print(f"DEBUG: WM_CLOSE 전송 완료 - {path}")
+                    time.sleep(0.5) # 창이 닫힐 시간을 소폭 부여
                 except Exception as close_err:
                     print(f"DEBUG: WM_CLOSE 전송 실패: {close_err}")
                 return
