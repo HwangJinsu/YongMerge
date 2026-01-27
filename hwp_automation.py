@@ -258,30 +258,39 @@ def fill_fields_with_find_replace(hwp, dataframe_row):
     return filled
 
 
-def remove_all_fields(hwp):
+def remove_all_fields(hwp, progress_callback=None):
     """문서 내의 모든 누름틀(Click-Here) 필드를 삭제합니다. (내용은 유지)"""
     try:
-        # 모든 누름틀 필드 목록 가져오기 (인덱스 포함)
-        # 1: 인덱스 포함, 2: 누름틀
-        field_list = hwp.GetFieldList(1, 2)
+        # 모든 누름틀 필드 목록 가져오기 (고유 이름만)
+        field_list = hwp.GetFieldList(0, 2)
         if not field_list:
             print("DEBUG: 삭제할 누름틀 필드가 없습니다.")
             return
 
-        fields = field_list.split("\x02")
-        print(f"DEBUG: 총 {len(fields)}개의 누름틀 필드 삭제 시도")
+        base_fields = [f for f in field_list.split("\x02") if f]
+        print(f"DEBUG: 총 {len(base_fields)}종류의 누름틀 필드 삭제 시작")
 
-        # 필드 삭제 작업
-        for field in fields:
-            if not field: continue
-            try:
-                # DeleteField 메서드는 (필드이름, 타입) 2개의 매개변수가 필요함
-                # 타입 2: 누름틀(Click-here)
-                hwp.DeleteField(field, 2)
-            except Exception as e:
-                # 특정 필드 삭제 실패 시 로그만 남기고 계속 진행
-                print(f"DEBUG: 필드 '{field}' 삭제 중 오류 (무시): {e}")
+        total_base = len(base_fields)
+        for i, field_name in enumerate(base_fields):
+            # 진행률 업데이트 (필드 삭제 작업이 오래 걸릴 수 있으므로 95-99% 구간 할당)
+            if progress_callback:
+                progress_callback.emit(95 + int((i / total_base) * 4))
+
+            # 해당 이름을 가진 필드가 문서에 없을 때까지 반복 삭제
+            # MoveToField(이름, 다음찾기, 시작부터, 전체선택)
+            count = 0
+            while hwp.MoveToField(field_name, True, True, True) and count < 1000:
+                try:
+                    hwp.HAction.Run("DeleteField")
+                    count += 1
+                except:
+                    break
+            
+            if count > 0:
+                print(f"DEBUG: 필드 '{field_name}' 총 {count}개 인스턴스 삭제 완료")
         
+        # 커서를 문서 처음으로 복귀
+        hwp.MovePos(0)
         print("DEBUG: 모든 누름틀 필드 삭제 작업 완료")
     except Exception as e:
         print(f"DEBUG: 전체 필드 삭제 로직 중 오류: {e}")
@@ -342,7 +351,7 @@ def process_hwp_template(dataframe, template_file_path, output_type, progress_ca
                 
                 hwp.Quit()
                 # 프로세스가 완전히 종료되고 파일 락이 풀릴 시간을 충분히 부여
-                time.sleep(0.8)
+                time.sleep(1.5)
                 print("DEBUG: HWP 인스턴스 종료 및 파일 락 해제 완료")
             except Exception as e:
                 print(f"DEBUG: HWP 종료 중 오류 (무시 가능): {e}")
@@ -407,7 +416,7 @@ def process_individual(hwp, dataframe, template_file_path, progress_callback):
                 print("    템플릿 문서를 확인하고 수정한 후 다시 시도하세요.\n")
             
             # 저장 전 누름틀(필드) 삭제
-            remove_all_fields(hwp)
+            remove_all_fields(hwp, progress_callback)
             
             # 저장
             output_path = os.path.join(output_dir, f"{base_name}_row_{index+1}{ext}")
@@ -659,7 +668,7 @@ def process_combined_safe(hwp, dataframe, template_file_path, progress_callback,
                 continue
         
         # 모든 작업 완료 후 누름틀(필드) 삭제 (최종본 깔끔하게 정리)
-        remove_all_fields(hwp)
+        remove_all_fields(hwp, progress_callback)
         
         # 최종 파일 저장
         abs_save_path = os.path.abspath(save_path)
