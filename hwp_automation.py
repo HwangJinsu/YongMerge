@@ -261,15 +261,20 @@ def fill_fields_with_find_replace(hwp, dataframe_row):
 def remove_all_fields(hwp):
     """문서 내의 모든 누름틀(Click-Here) 필드를 삭제합니다. (내용은 유지)"""
     try:
-        # 모든 누름틀 필드 목록 가져오기 (0: 전체, 2: 누름틀)
-        field_list = hwp.GetFieldList(0, 2)
+        # 모든 누름틀 필드 목록 가져오기
+        # option 1: 모든 필드를 인덱스({{0}}, {{1}}...) 포함해서 가져옴 -> 중복 필드 대응 가능
+        # type 2: 누름틀 필드만 대상
+        field_list = hwp.GetFieldList(1, 2)
         if not field_list:
+            print("DEBUG: 삭제할 누름틀 필드가 없습니다.")
             return
 
         fields = field_list.split("\x02") # \x02(단위 구분자)로 구분됨
-        print(f"DEBUG: 총 {len(fields)}개의 누름틀 필드 삭제 시작")
+        print(f"DEBUG: 총 {len(fields)}개의 누름틀 필드(인덱스 포함) 삭제 시작")
 
-        for field in fields:
+        # 필드 삭제 작업 (역순으로 삭제하는 것이 더 안정적일 수 있음)
+        for field in reversed(fields):
+            if not field: continue
             try:
                 # 필드 자체를 삭제 (내용은 문서에 남음)
                 hwp.DeleteField(field)
