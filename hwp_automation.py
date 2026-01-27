@@ -334,11 +334,21 @@ def process_individual(hwp, dataframe, template_file_path, progress_callback):
             except:
                 pass
 
-            # 문서 열기
+            # 문서 열기 (재시도 로직 추가)
             abs_template = os.path.abspath(template_file_path)
-            result = hwp.Open(abs_template, file_format, "")
-            if not result:
-                raise Exception(f"템플릿 파일을 열 수 없습니다: {template_file_path}")
+            opened = False
+            for attempt in range(3):
+                try:
+                    result = hwp.Open(abs_template, file_format, "")
+                    if result:
+                        opened = True
+                        break
+                except Exception as open_err:
+                    print(f"DEBUG: HWP Open 시도 {attempt+1} 실패: {open_err}")
+                time.sleep(0.5)
+
+            if not opened:
+                raise Exception(f"템플릿 파일을 열 수 없습니다 (3회 시도): {template_file_path}")
 
             time.sleep(0.3)
 
@@ -390,15 +400,28 @@ def process_combined_safe(hwp, dataframe, template_file_path, progress_callback,
                 # 기존 문서 닫기
                 try:
                     hwp.Clear(1)
-                    time.sleep(0.1)
+                    time.sleep(0.2)
                 except:
                     pass
 
-                # 문서 열기
+                # 문서 열기 (재시도 로직 추가하여 안정성 확보)
                 abs_template = os.path.abspath(template_file_path)
-                result = hwp.Open(abs_template, file_format, "")
-                if not result:
-                    raise Exception(f"템플릿 파일을 열 수 없습니다: {template_file_path}")
+                opened = False
+                for attempt in range(3):
+                    try:
+                        result = hwp.Open(abs_template, file_format, "")
+                        if result:
+                            opened = True
+                            break
+                        else:
+                            print(f"DEBUG: HWP Open 시도 {attempt+1} 반환값 False")
+                    except Exception as open_err:
+                        print(f"DEBUG: HWP Open 시도 {attempt+1} 중 예외: {open_err}")
+                    
+                    time.sleep(0.5) # 실패 시 잠시 대기
+
+                if not opened:
+                    raise Exception(f"템플릿 파일을 열 수 없습니다 (3회 시도): {template_file_path}")
 
                 time.sleep(0.3)
 

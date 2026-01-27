@@ -53,6 +53,7 @@ class AutomationWorker(QThread):
 
     def run(self):
         try:
+            pythoncom.CoInitialize()
             result_message = ""
             if self.doc_type == 'hwp':
                 result_message = hwp_automation.process_hwp_template(
@@ -68,6 +69,8 @@ class AutomationWorker(QThread):
             self.finished.emit(result_message, self.output_type, output_file)
         except Exception as e:
             self.error.emit(str(e))
+        finally:
+            pythoncom.CoUninitialize()
 
 # List of pleasant colors for field buttons
 FIELD_COLORS = [
