@@ -952,6 +952,20 @@ class MailMergeApp(QMainWindow):
 
         # DataFrame 업데이트
         col_name = self.dataframe.columns[column]
+        
+        # 이미지 열의 경우, 표시 텍스트(📷 ...)가 DataFrame에 저장되지 않도록 방어
+        if col_name == "이미지" and isinstance(value, str) and value.startswith("📷 "):
+             # 현재 저장된 값의 표시 이름과 같다면 (즉, 사용자가 내용 변경 없이 엔터만 친 경우) 무시
+             current_val = self.dataframe.at[row, col_name]
+             if current_val and image_utils.get_image_display_name(current_val) == value:
+                 return
+             
+             # 내용이 다르더라도 "📷 "로 시작하면 유효한 파일 경로가 아닐 확률이 높으므로
+             # 실제 파일이 존재하지 않는 한 업데이트를 무시하거나 경고
+             if not os.path.exists(value):
+                 print(f"DEBUG: 이미지 열의 표시 텍스트 업데이트 무시: {value}")
+                 return
+
         self.dataframe.at[row, col_name] = value if value else None
         self.update_generate_button_state()
 
@@ -1311,7 +1325,11 @@ class MailMergeApp(QMainWindow):
             # 테이블에 표시 (아이콘 + 파일명)
             display_text = image_utils.get_image_display_name(img_path)
             item = QTableWidgetItem(display_text)
+            
+            # 테이블 업데이트 시 시그널 차단 (DataFrame에 표시 텍스트가 덮어씌워지는 것 방지)
+            self.data_table.blockSignals(True)
             self.data_table.setItem(row_idx, image_col_idx, item)
+            self.data_table.blockSignals(False)
 
             print(f"DEBUG: 행 {row_idx + 1}에 이미지 추가: {os.path.basename(img_path)}")
 
@@ -1356,7 +1374,11 @@ class MailMergeApp(QMainWindow):
         # 테이블에 표시 (아이콘 + 파일명)
         display_text = image_utils.get_image_display_name(file_path)
         item = QTableWidgetItem(display_text)
+        
+        # 테이블 업데이트 시 시그널 차단 (DataFrame에 표시 텍스트가 덮어씌워지는 것 방지)
+        self.data_table.blockSignals(True)
         self.data_table.setItem(row, column, item)
+        self.data_table.blockSignals(False)
 
         print(f"DEBUG: 행 {row + 1}, 열 '{col_name}'에 이미지 추가: {os.path.basename(file_path)}")
 
