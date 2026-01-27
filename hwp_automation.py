@@ -258,6 +258,29 @@ def fill_fields_with_find_replace(hwp, dataframe_row):
     return filled
 
 
+def remove_all_fields(hwp):
+    """문서 내의 모든 누름틀(Click-Here) 필드를 삭제합니다. (내용은 유지)"""
+    try:
+        # 모든 누름틀 필드 목록 가져오기 (0: 전체, 2: 누름틀)
+        field_list = hwp.GetFieldList(0, 2)
+        if not field_list:
+            return
+
+        fields = field_list.split("\x02") # \x02(단위 구분자)로 구분됨
+        print(f"DEBUG: 총 {len(fields)}개의 누름틀 필드 삭제 시작")
+
+        for field in fields:
+            try:
+                # 필드 자체를 삭제 (내용은 문서에 남음)
+                hwp.DeleteField(field)
+            except:
+                pass
+        
+        print("DEBUG: 모든 누름틀 필드 삭제 완료")
+    except Exception as e:
+        print(f"DEBUG: 필드 삭제 중 오류 (무시 가능): {e}")
+
+
 def process_hwp_template(dataframe, template_file_path, output_type, progress_callback, save_path=None):
     """HWP 템플릿을 처리합니다.
 
@@ -368,6 +391,9 @@ def process_individual(hwp, dataframe, template_file_path, progress_callback):
             if index == 0 and filled == 0:
                 print("\n⚠️  첫 번째 문서에서 필드가 하나도 채워지지 않았습니다.")
                 print("    템플릿 문서를 확인하고 수정한 후 다시 시도하세요.\n")
+            
+            # 저장 전 누름틀(필드) 삭제
+            remove_all_fields(hwp)
             
             # 저장
             output_path = os.path.join(output_dir, f"{base_name}_row_{index+1}{ext}")
@@ -617,6 +643,9 @@ def process_combined_safe(hwp, dataframe, template_file_path, progress_callback,
                 traceback.print_exc()
                 # 오류 발생 시에도 계속 진행
                 continue
+        
+        # 모든 작업 완료 후 누름틀(필드) 삭제 (최종본 깔끔하게 정리)
+        remove_all_fields(hwp)
         
         # 최종 파일 저장
         abs_save_path = os.path.abspath(save_path)
