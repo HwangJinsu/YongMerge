@@ -1,75 +1,75 @@
-# ✨ 용머지 (YongMerge)
+# ✨ YongMerge
 
-용머지는 엑셀 데이터를 활용하여 **한글(HWP)** 및 **파워포인트(PPT)** 문서를 손쉽게 자동 생성해주는 '메일 머지(Mail Merge)' 자동화 프로그램입니다.
+YongMerge is a 'Mail Merge' automation program that enables you to easily generate **Hangul (HWP)** and **PowerPoint (PPT)** documents using Excel data.
 
-반복적인 문서 작업 시간을 획기적으로 단축시켜 줍니다. 상장, 성적표, 안내문, 명찰 등 데이터 기반의 대량 문서 제작에 최적화되어 있습니다.
+It drastically reduces repetitive document processing time and is optimized for mass-producing data-driven documents such as certificates, report cards, notices, and name tags.
 
-## 🚀 주요 기능
+## 🚀 Key Features
 
-*   **📄 강력한 호환성**: 
-    *   한글 (`.hwp`, `.hwpx`)과 파워포인트 (`.ppt`, `.pptx`) 모두 메일머지 기능 사용 가능
-*   **📊 간편한 데이터 관리**: 
-    *   엑셀(`xlsx`) 파일 불러오기 지원
-    *   프로그램 내에서 스프레드시트 형태로 데이터 직접 수정 및 편집 가능
-    *   '우클릭' 통한 행/열 추가 및 삭제, 실행 취소(Undo) / 다시 실행(Redo) 지원
-*   **🖱️ 직관적인 사용자 경험 (UX)**:
-    *   **클릭 기반 필드 삽입**: 필드 버튼을 클릭하여 문서에 삽입
-    *   **자동화된 필드 매핑**: `{{필드명}}` 형식을 자동으로 인식하여 데이터 치환
-*   **🖼️ 이미지 자동 삽입**:
-    *   문서 내 특정 위치에 이미지(사진, 서명, 로고 등) 자동 삽입 기능
-    *   이미지 크기 및 비율 자동 조정(한글의 '표', PPT의 '사각형' 크기에 맞춰짐)
-*   **💾 유연한 출력 옵션**:
-    *   **개별 파일 저장**: 각 행마다 별도의 파일로 생성
-    *   **통합 파일 저장**: 모든 데이터를 하나의 파일로 병합하여 생성
+*   **📄 Powerful Compatibility**: 
+    *   Supports both Hangul (`.hwp`, `.hwpx`) and PowerPoint (`.ppt`, `.pptx`) mail merge functions.
+*   **📊 Easy Data Management**: 
+    *   Supports importing Excel (`.xlsx`) files.
+    *   Allows direct data modification and editing in a spreadsheet format within the program.
+    *   Supports adding/deleting rows and columns via right-click, along with Undo/Redo functionality.
+*   **🖱️ Intuitive User Experience (UX)**:
+    *   **Click-based Field Insertion**: Click field buttons to insert placeholders directly into the document.
+    *   **Automated Field Mapping**: Automatically recognizes the `{{FieldName}}` format to substitute data.
+*   **🖼️ Automatic Image Insertion**:
+    *   Automatically inserts images (photos, signatures, logos, etc.) into specific locations in the document.
+    *   Automatic adjustment of image size and ratio (matched to 'Tables' in Hangul and 'Rectangles' in PPT).
+*   **💾 Flexible Output Options**:
+    *   **Save as Individual Files**: Generates a separate file for each data row.
+    *   **Save as Combined File**: Merges all data into a single file.
 
-## 🛠️ 시스템 요구 사항
+## 🛠️ System Requirements
 
-*   **OS**: Windows 10 또는 11 (한글/PPT 자동화를 위해 Windows 환경 필수)
-*   **필수 소프트웨어**:
-    *   한글 2010 이상 (한글 문서 자동화 시)
-    *   Microsoft PowerPoint (PPT 문서 자동화 시)
+*   **OS**: Windows 10 or 11 (Windows environment is required for Hangul/PPT automation).
+*   **Required Software**:
+    *   Hangul 2010 or higher (for Hangul document automation).
+    *   Microsoft PowerPoint (for PPT document automation).
 
-## 📦 실행 방법
+## 📦 How to Run
 
-용머지는 별도의 설치 과정이 필요 없는 **단일 실행 파일** 형태로 배포됩니다.
+YongMerge is distributed as a **single executable file**, requiring no separate installation.
 
-1.  배포된 `YongMerge.exe` 파일을 다운로드합니다.
-2.  다운로드한 파일을 더블 클릭하여 프로그램을 실행합니다.
-    *   *최초 실행 시 'Windows의 PC 보호' 팝업이 뜰 경우, '추가 정보'를 클릭한 후 '실행' 버튼을 눌러주세요.*
+1.  Download the distributed `YongMerge.exe` file.
+2.  Double-click the downloaded file to run the program.
+    *   *If a 'Windows protected your PC' popup appears during the first run, click 'More info' and then click 'Run anyway'.*
 
 ---
 
-### 👨‍💻 개발자용 (소스 코드 실행)
+### 👨‍💻 For Developers (Running from Source Code)
 
-직접 소스 코드를 수정하거나 실행하려는 경우 다음 환경이 필요합니다.
+If you wish to modify or run the source code directly, you will need the following environment:
 
-*   **Python**: 3.8 이상
-*   **라이브러리 설치**: `pip install PyQt5 pywin32 pandas openpyxl Pillow`
-*   **실행**: `python main_app.py`
+*   **Python**: 3.8 or higher
+*   **Install Libraries**: `pip install PyQt5 pywin32 pandas openpyxl Pillow`
+*   **Run**: `python main_app.py`
 
-## 📖 사용 가이드
+## 📖 Usage Guide
 
-1.  **프로그램 실행**: `YongMerge.exe`를 실행하여 용머지를 켭니다.
-2.  **템플릿 불러오기**: '템플릿 파일 선택' 버튼을 눌러 작업할 양식 파일(한글 또는 PPT)을 선택합니다.
-3.  **데이터 준비**:
-    *   **엑셀 업로드**: 'XLSX 업로드' 버튼을 눌러 데이터가 담긴 엑셀 파일을 불러옵니다.
-    *   **직접 입력**: '필드 생성'에 이름을 입력하여 열을 만들고, 테이블에 직접 데이터를 입력합니다.
-4.  **필드 삽입**:
-    *   프로그램 상단의 필드 버튼을 클릭하면 문서의 현재 커서 위치에 필드(누름틀 또는 텍스트)가 삽입됩니다.
-    *   PPT의 경우 슬라이드에 직접 `{{이름}}`, `{{주소}}` 와 같이 중괄호 두 개로 감싼 텍스트를 입력해도 됩니다.
-5.  **이미지 삽입 (선택 사항)**:
-    *   '이미지 추가' 버튼을 눌러 이미지 파일들을 불러오면 '이미지' 열이 생성되고 경로가 입력됩니다.
-    *   PPT의 경우 `{{이미지}}` 텍스트가 있는 도형이나 상자에 이미지가 삽입됩니다.
-6.  **문서 생성**: '문서 생성' 버튼을 클릭합니다. '개별 파일로 저장' 또는 '통합 파일로 저장' 중 원하는 방식을 선택하면 작업이 시작됩니다.
+1.  **Launch Program**: Open `YongMerge.exe` to start the application.
+2.  **Load Template**: Click 'Select Template File' to choose your template (Hangul or PPT).
+3.  **Prepare Data**:
+    *   **Upload XLSX**: Click 'Upload XLSX' to load an Excel file containing your data.
+    *   **Manual Entry**: Enter names in 'Field Creation' to create columns and input data directly into the table.
+4.  **Insert Fields**:
+    *   Click the field buttons at the top of the program to insert placeholders (`{{FieldName}}`) at the current cursor position in the document.
+    *   In PPT, you can also manually type `{{Name}}`, `{{Address}}`, etc., into text boxes on the slides.
+5.  **Insert Images (Optional)**:
+    *   Use the 'Add Image' button to load image files; paths will be automatically entered into the 'Image' column.
+    *   In PPT, images will be inserted into shapes or boxes containing the `{{Image}}` text placeholder.
+6.  **Generate Document**: Click 'Generate Document'. Choose between 'Save as Individual Files' or 'Save as Combined File' to start the process.
 
-## ⚠️ 주의 사항
+## ⚠️ Precautions
 
-*   문서 생성 작업 중에는 마우스나 키보드 조작을 가급적 삼가주세요. (자동화 스크립트가 키보드/마우스 제어권을 사용할 수 있습니다.)
-*   한글(HWP) 자동화 시 보안 승인 팝업이 뜰 수 있으며, '모두 허용'을 해주셔야 정상 작동합니다.
+*   Please avoid using the mouse or keyboard during the document generation process, as the automation script may take control of them.
+*   A security authorization popup may appear during Hangul (HWP) automation; you must click 'Allow All' for the program to function correctly.
 
-## 📄 오픈소스 라이선스
+## 📄 Open Source Licenses
 
-용머지는 다음 오픈소스 소프트웨어를 사용하며, 각 라이선스 조건을 준수합니다.
+YongMerge uses the following open-source software and complies with their respective license conditions:
 
 *   **Python 3** (PSF License) - [https://www.python.org/](https://www.python.org/)
 *   **PyQt5** (GPL v3) - [https://www.riverbankcomputing.com/software/pyqt/](https://www.riverbankcomputing.com/software/pyqt/)
