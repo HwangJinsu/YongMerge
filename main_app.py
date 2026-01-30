@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLineEdit, 
     QHBoxLayout, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView, 
     QFileDialog, QMessageBox, QLabel, QSizePolicy, QScrollArea, QFrame, QInputDialog,
-    QProgressDialog, QMenu, QAction
+    QProgressDialog, QMenu, QAction, QDialog, QDialogButtonBox
 )
 from PyQt5.QtCore import Qt, QMimeData, QEvent, pyqtSignal, QThread
 from PyQt5.QtGui import QDrag, QPixmap, QKeySequence, QFontDatabase, QFont, QPalette, QColor, QBrush
@@ -15,6 +15,7 @@ import pandas as pd
 import time
 import os
 import winreg
+import webbrowser
 import win32com.client
 from win32com.client import dynamic
 
@@ -438,7 +439,7 @@ class MailMergeApp(QMainWindow):
                 print("⚠️ 한글 COM 등록 정보를 찾을 수 없습니다.")
 
     def initUI(self):
-        self.setWindowTitle('✨ 용merge ✨')
+        self.setWindowTitle('✨ 용Merge ✨')
         self.setGeometry(100, 100, 1180, 840)
         font_id = QFontDatabase.addApplicationFont("PretendardVariable.ttf")
         if font_id != -1:
@@ -448,13 +449,47 @@ class MailMergeApp(QMainWindow):
         base_font = QFont(font_family, 12)
         self.setFont(base_font)
         self.setStyleSheet(f"""
-            QWidget {{ background-color: #FFFFFF; font-family: '{font_family}'; color: #1E1E1E; font-size: 15px; }}
+            QWidget {{ background-color: #FFFFFF; font-family: '{font_family}', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji'; color: #1E1E1E; font-size: 15px; }}
             QLabel.title {{ font-size: 20px; font-weight: 600; color: #202020; }}
             QLabel.subtitle {{ font-size: 18px; font-weight: 600; color: #2D2F33; }}
             QLabel {{ font-size: 15px; color: #42454D; }}
             QLineEdit {{ border: 1px solid #C2C7CF; border-radius: 8px; padding: 12px; font-size: 15px; }}
             QTableWidget {{ background: #FFFFFF; gridline-color: #E1E4E8; font-size: 14px; selection-background-color: #E8F1FF; }}
             QTableWidget::item:selected {{ color: #000000; }}
+
+            QMenuBar {{
+                background-color: #F8FAFC;
+                border-bottom: 1px solid #E2E8F0;
+                font-size: 16px;
+                padding: 4px;
+                font-weight: 500;
+            }}
+            QMenuBar::item {{
+                padding: 8px 16px;
+                background: transparent;
+                border-radius: 6px;
+                margin: 2px 4px;
+            }}
+            QMenuBar::item:selected {{
+                background-color: #EDF2F7;
+                color: #2563EB;
+            }}
+            QMenu {{
+                background-color: #FFFFFF;
+                border: 1px solid #CBD5E1;
+                padding: 6px;
+                font-size: 15px;
+                border-radius: 8px;
+            }}
+            QMenu::item {{
+                padding: 10px 32px 10px 32px;
+                border-radius: 4px;
+                margin: 2px 0;
+            }}
+            QMenu::item:selected {{
+                background-color: #2563EB;
+                color: #FFFFFF;
+            }}
         """)
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -462,9 +497,25 @@ class MailMergeApp(QMainWindow):
 
         # 상단 메뉴
         menubar = self.menuBar()
-        info_menu = menubar.addMenu("정보")
-        license_action = info_menu.addAction("오픈소스 라이선스")
+        menubar.setNativeMenuBar(False)
+        help_menu = menubar.addMenu("도움말")
+        
+        guide_action = help_menu.addAction("사용방법 안내")
+        guide_action.triggered.connect(self.open_user_guide)
+        
+        about_action = help_menu.addAction("정보")
+        about_action.triggered.connect(self.show_app_info)
+        
+        license_action = help_menu.addAction("오픈소스 라이선스")
         license_action.triggered.connect(self.show_open_source_info)
+
+        # ❣️ 후원 메뉴
+        support_menu = menubar.addMenu("❣️개발자 후원하기❣️")
+        donate_kakao_action = QAction("카카오페이로 후원하기", self)
+        donate_kakao_action.triggered.connect(self.show_kakao_donation_dialog)
+        donate_paypal_action = QAction("PayPal로 후원하기", self)
+        donate_paypal_action.triggered.connect(self.show_paypal_donation_dialog)
+        support_menu.addActions([donate_kakao_action, donate_paypal_action])
         
         field_creation_layout = QHBoxLayout()
         self.field_name_input = QLineEdit(placeholderText="새 필드 이름 입력 후 Enter")
@@ -810,6 +861,76 @@ class MailMergeApp(QMainWindow):
                 continue
         return None
 
+    def open_user_guide(self):
+        """유튜브 사용방법 안내 페이지 열기"""
+        webbrowser.open("https://www.youtube.com/playlist?list=PLs36bSFfggCDasZxzGGHls3tvZF4cif5J")
+
+    def show_app_info(self):
+        """앱 정보 및 저작권 팝업 표시"""
+        path_candidates = []
+        try:
+            if hasattr(sys, '_MEIPASS'):
+                path_candidates.append(os.path.join(sys._MEIPASS, 'YongMerge_img.png'))
+        except Exception:
+            pass
+        
+        try:
+            path_candidates.append(os.path.join(os.getcwd(), 'YongMerge_img.png'))
+            module_dir = os.path.dirname(os.path.abspath(__file__))
+            path_candidates.append(os.path.join(module_dir, 'YongMerge_img.png'))
+        except Exception:
+            pass
+
+        selected_path = None
+        for p in path_candidates:
+            if p and os.path.exists(p):
+                selected_path = p
+                break
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("정보")
+        layout = QVBoxLayout(dialog)
+        layout.setSpacing(20)
+        layout.setContentsMargins(30, 30, 30, 30)
+
+        # 이미지 표시
+        if selected_path:
+            pixmap = QPixmap(selected_path)
+            if not pixmap.isNull():
+                image_label = QLabel(dialog)
+                image_label.setAlignment(Qt.AlignCenter)
+                max_width = 300
+                if pixmap.width() > max_width:
+                    scaled = pixmap.scaledToWidth(max_width, Qt.SmoothTransformation)
+                else:
+                    scaled = pixmap
+                image_label.setPixmap(scaled)
+                layout.addWidget(image_label)
+
+        # 텍스트 정보
+        info_text = (
+            "<div style='text-align: center;'>"
+            "<span style='font-size: 18px; font-weight: bold;'>용머지(YongMerge)</span><br><br>"
+            "개발: Hwang Jinsu<br>"
+            "메일: iiish @hanmail.net<br>"
+            "채널: <a href='https://www.youtube.com/playlist?list=PLs36bSFfggCDasZxzGGHls3tvZF4cif5J'>용툴즈 스튜디오</a><br>"
+            "라이선스: 프리웨어<br>"
+            "본 소프트웨어는 개인/업무용 무료 사용 가능합니다.<br><br>"
+            "<span style='color: #666;'>© 2025 YongMerge · Hwang Jinsu. All rights reserved.</span>"
+            "</div>"
+        )
+        text_label = QLabel(info_text)
+        text_label.setAlignment(Qt.AlignCenter)
+        text_label.setOpenExternalLinks(True)
+        layout.addWidget(text_label)
+
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+        button_box.accepted.connect(dialog.accept)
+        layout.addWidget(button_box)
+        
+        dialog.setModal(True)
+        dialog.exec_()
+
     def show_open_source_info(self):
         message = (
             "용머지(YongMerge)는 다음 오픈소스 소프트웨어를 사용하며, 각 라이선스 조건을 준수하여 배포됩니다:\n\n"
@@ -830,6 +951,71 @@ class MailMergeApp(QMainWindow):
             "저작권, 라이선스 전문 및 상세 정보는 앱 소스코드 저장소에서 확인할 수 있습니다."
         )
         QMessageBox.information(self, "오픈소스 라이선스", message)
+
+    def show_kakao_donation_dialog(self):
+        """카카오페이 후원 QR 코드 표시"""
+        path_candidates = []
+        try:
+            # 1. 실행 파일 환경 (PyInstaller)
+            if hasattr(sys, '_MEIPASS'):
+                path_candidates.append(os.path.join(sys._MEIPASS, 'yongpdf_donation.jpg'))
+        except Exception:
+            pass
+        
+        try:
+            # 2. 현재 디렉토리 및 모듈 디렉토리
+            path_candidates.append(os.path.join(os.getcwd(), 'yongpdf_donation.jpg'))
+            module_dir = os.path.dirname(os.path.abspath(__file__))
+            path_candidates.append(os.path.join(module_dir, 'yongpdf_donation.jpg'))
+        except Exception:
+            pass
+
+        selected_path = None
+        for p in path_candidates:
+            if p and os.path.exists(p):
+                selected_path = p
+                break
+
+        if not selected_path:
+            QMessageBox.warning(self, "경고", "후원 이미지(yongpdf_donation.jpg)를 찾을 수 없습니다.")
+            return
+
+        pixmap = QPixmap(selected_path)
+        if pixmap.isNull():
+            QMessageBox.warning(self, "경고", "후원 이미지를 불러올 수 없습니다.")
+            return
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("카카오페이로 후원하기")
+        layout = QVBoxLayout(dialog)
+        image_label = QLabel(dialog)
+        image_label.setAlignment(Qt.AlignCenter)
+        max_width = 480
+        if pixmap.width() > max_width:
+            scaled = pixmap.scaledToWidth(max_width, Qt.SmoothTransformation)
+        else:
+            scaled = pixmap
+        image_label.setPixmap(scaled)
+        layout.addWidget(image_label)
+
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+        button_box.accepted.connect(dialog.accept)
+        layout.addWidget(button_box)
+        dialog.setModal(True)
+        dialog.resize(scaled.width() + 40, scaled.height() + 80)
+        dialog.exec_()
+
+    def show_paypal_donation_dialog(self):
+        """PayPal 후원 안내"""
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("PayPal로 후원하기")
+        msg_box.setTextFormat(Qt.RichText)
+        msg_box.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        message = '<a href="https://www.paypal.com/paypalme/1hwangjinsu">https://www.paypal.com/paypalme/1hwangjinsu</a> 에서 후원해주세요🙏 진심으로 감사합니다❣️'
+        msg_box.setText(message)
+        msg_box.exec_()
 
 
     def _insert_hwp_field(self, field_name):

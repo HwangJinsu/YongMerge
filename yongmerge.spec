@@ -19,6 +19,8 @@ a = Analysis(
     datas=[
         (_resource("PretendardVariable.ttf"), "."),
         (_resource("yongmerge.ico"), "."),
+        (_resource("yongpdf_donation.jpg"), "."),
+        (_resource("YongMerge_img.png"), "."),
     ],
     hiddenimports=hidden_imports,
     hookspath=[],
