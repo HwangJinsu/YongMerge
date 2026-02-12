@@ -62,39 +62,59 @@ def insert_image_to_word(word_range, image_path, max_width_pt=450):
         return False
 
 def replace_text_in_story_ranges(doc, old_text, new_text):
-    """문서 내 모든 영역(도형, 본문 등)에서 텍스트/이미지 교체"""
+    """문서 내 모든 영역(본문, 헤더, 푸터, 텍스트 상자 등)에서 텍스트/이미지 교체"""
     found_any = False
     is_image = image_utils.is_image_file(new_text)
 
+    # 1. 모든 StoryRanges (본문, 헤더, 푸터 등) 처리
     for story in doc.StoryRanges:
         current_range = story
         while current_range:
-            if is_image:
-                search_range = current_range.Duplicate
-                while True:
-                    find_obj = search_range.Find
-                    find_obj.ClearFormatting()
-                    find_obj.Text = old_text
-                    find_obj.Forward = True
-                    find_obj.Wrap = 0 # wdFindStop
-                    if find_obj.Execute():
-                        search_range.Text = ""
-                        if insert_image_to_word(search_range, new_text):
-                            found_any = True
-                        start_pos = search_range.End
-                        if start_pos >= story.End: break
-                        search_range = doc.Range(start_pos, story.End)
-                    else: break
-            else:
-                find_obj = current_range.Find
-                find_obj.ClearFormatting()
-                find_obj.Replacement.ClearFormatting()
-                find_obj.Text = old_text
-                find_obj.Replacement.Text = str(new_text)
-                if find_obj.Execute(Replace=2): found_any = True
+            # 해당 영역 내의 텍스트/이미지 교체
+            if _replace_in_range(doc, current_range, old_text, new_text, is_image):
+                found_any = True
             
+            # 해당 영역에 포함된 도형(Shapes) 처리 (텍스트 상자 등)
+            try:
+                if current_range.ShapeRange.Count > 0:
+                    for shape in current_range.ShapeRange:
+                        if shape.TextFrame.HasText:
+                            if _replace_in_range(doc, shape.TextFrame.TextRange, old_text, new_text, is_image):
+                                found_any = True
+            except: pass
+
             current_range = current_range.NextStoryRange
     return found_any
+
+def _replace_in_range(doc, target_range, old_text, new_text, is_image):
+    """지정된 범위(Range) 내에서 텍스트 또는 이미지를 교체합니다."""
+    found = False
+    if is_image:
+        search_range = target_range.Duplicate
+        while True:
+            find_obj = search_range.Find
+            find_obj.ClearFormatting()
+            find_obj.Text = old_text
+            find_obj.Forward = True
+            find_obj.Wrap = 0 # wdFindStop
+            if find_obj.Execute():
+                search_range.Text = ""
+                if insert_image_to_word(search_range, new_text):
+                    found = True
+                # 다음 검색을 위해 범위 조정
+                start_pos = search_range.End
+                if start_pos >= target_range.End: break
+                search_range = doc.Range(start_pos, target_range.End)
+            else: break
+    else:
+        find_obj = target_range.Find
+        find_obj.ClearFormatting()
+        find_obj.Replacement.ClearFormatting()
+        find_obj.Text = old_text
+        find_obj.Replacement.Text = str(new_text)
+        if find_obj.Execute(Replace=2): # 2: wdReplaceAll
+            found = True
+    return found
 
 def process_word_template(dataframe, template_file_path, output_type, progress_callback, save_path=None):
     """메인 프로세스"""
