@@ -1878,10 +1878,53 @@ class MailMergeApp(QMainWindow):
 
     def add_images(self):
         """이미지 파일을 선택하고 시트에 추가합니다."""
-        # 다중 이미지 파일 선택 다이얼로그
+        # 1. 대상 열 결정
+        image_cols = [c for f in [self.dataframe.columns] for c in f if str(c).startswith("이미지")]
+        target_field = None
+
+        if not image_cols:
+            # 이미지 열이 하나도 없으면 새로 생성
+            target_field = "이미지"
+            self.save_state()
+            self.create_field(field_name=target_field, from_input=False)
+        else:
+            # 기존 이미지 열이 있는 경우 선택 다이얼로그 표시
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("이미지 열 선택")
+            msg_box.setText("이미지를 추가할 열을 선택하거나 새 열을 만드세요.")
+            
+            # 기존 열들을 버튼으로 추가
+            buttons = {}
+            for col in image_cols:
+                btn = msg_box.addButton(f"'{col}' 열에 추가", QMessageBox.ActionRole)
+                buttons[btn] = col
+            
+            new_col_btn = msg_box.addButton("➕ 새 이미지 열 생성", QMessageBox.ActionRole)
+            cancel_btn = msg_box.addButton(lang_mgr.get('btn_cancel'), QMessageBox.RejectRole)
+            
+            msg_box.exec_()
+            clicked = msg_box.clickedButton()
+            
+            if clicked == cancel_btn:
+                return
+            elif clicked == new_col_btn:
+                # 새 열 이름 결정 (이미지2, 이미지3...)
+                idx = 2
+                while f"이미지{idx}" in self.dataframe.columns:
+                    idx += 1
+                target_field = f"이미지{idx}"
+                self.save_state()
+                self.create_field(field_name=target_field, from_input=False)
+            else:
+                target_field = buttons.get(clicked)
+
+        if not target_field:
+            return
+
+        # 2. 파일 선택
         file_paths, _ = QFileDialog.getOpenFileNames(
             self,
-            lang_mgr.get('btn_add_image'),
+            f"[{target_field}] {lang_mgr.get('btn_add_image')}",
             "",
             "Image Files (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp)"
         )
@@ -1889,7 +1932,7 @@ class MailMergeApp(QMainWindow):
         if not file_paths:
             return
 
-        # 선택된 파일 검증
+        # 3. 파일 검증
         valid_images = []
         invalid_images = []
 
@@ -1900,74 +1943,57 @@ class MailMergeApp(QMainWindow):
             else:
                 invalid_images.append((file_path, message))
 
-        # 유효하지 않은 이미지가 있으면 경고
         if invalid_images:
             error_msg = lang_mgr.get('msg_warn_img_load_fail')
-            for path, reason in invalid_images[:5]:  # 최대 5개만 표시
+            for path, reason in invalid_images[:5]:
                 error_msg += f"• {os.path.basename(path)}: {reason}\n"
-            if len(invalid_images) > 5:
-                error_msg += f"\n... {lang_mgr.get('msg_done')} {len(invalid_images) - 5}"
             QMessageBox.warning(self, lang_mgr.get('msg_warn_img_validate_fail'), error_msg)
 
         if not valid_images:
             return
 
+        # 4. 데이터 입력
         self.save_state()
-        # Step 1: '이미지' 필드가 없으면 자동 생성
-        image_field_name = "이미지"
-        if image_field_name not in self.dataframe.columns:
-            self.create_field(field_name=image_field_name, from_input=False)
-
-        # Step 2: 이미지 열의 마지막 데이터가 있는 행 찾기
-        image_col_idx = self.dataframe.columns.get_loc(image_field_name)
-        last_data_row = -1  # 데이터가 없으면 -1
-
+        
+        # 대상 열 인덱스 확인
+        image_col_idx = self.dataframe.columns.get_loc(target_field)
+        
+        # 마지막 데이터 위치 찾기
+        last_data_row = -1
         for idx in range(len(self.dataframe) - 1, -1, -1):
-            cell_value = self.dataframe.at[idx, image_field_name]
+            cell_value = self.dataframe.at[idx, target_field]
             if pd.notna(cell_value) and str(cell_value).strip():
                 last_data_row = idx
                 break
 
-        # 다음 행부터 시작 (마지막 데이터 행 + 1)
         start_row = last_data_row + 1
-
-        # Step 3: 필요한 행 수 계산 및 추가
         required_rows = start_row + len(valid_images)
-        current_row_count = len(self.dataframe)
-
+        
         # 부족한 행 추가
-        if required_rows > current_row_count:
-            rows_to_add = required_rows - current_row_count
-            for _ in range(rows_to_add):
-                self.data_table.insertRow(self.data_table.rowCount())
+        if required_rows > len(self.dataframe):
+            self.data_table.setRowCount(required_rows)
             self.sync_dataframe_with_table_rows()
 
-        # Step 4: 마지막 데이터 다음 행부터 이미지 경로 순차 입력
-
+        # 데이터 및 UI 업데이트
         for idx, img_path in enumerate(valid_images):
             row_idx = start_row + idx
             normalized_path = image_utils.normalize_image_path(img_path)
+            self.dataframe.at[row_idx, target_field] = normalized_path
 
-            # DataFrame에 저장
-            self.dataframe.at[row_idx, image_field_name] = normalized_path
-
-            # 테이블에 표시 (아이콘 + 파일명)
             display_text = image_utils.get_image_display_name(img_path)
             item = QTableWidgetItem(display_text)
+            item.setTextAlignment(Qt.AlignCenter)
             
-            # 테이블 업데이트 시 시그널 차단
             self.data_table.blockSignals(True)
             self.data_table.setItem(row_idx, image_col_idx, item)
             self.data_table.blockSignals(False)
 
-        # Step 4: UI 업데이트
         self.update_generate_button_state()
-
-        # 성공 메시지
         QMessageBox.information(
             self,
             lang_mgr.get('msg_done'),
-            lang_mgr.get('msg_info_img_add_summary').format(len(valid_images), image_field_name, start_row + 1, start_row + len(valid_images))
+            f"{len(valid_images)}개의 이미지가 '{target_field}' 열에 추가되었습니다.\n(행 {start_row+1} ~ {start_row+len(valid_images)})"
+        )
         )
 
     def on_image_cell_double_clicked(self, row, column):
