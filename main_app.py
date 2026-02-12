@@ -235,15 +235,23 @@ class EnhancedTableWidget(QTableWidget):
         self.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed | QAbstractItemView.AnyKeyPressed)
         self.setTextElideMode(Qt.ElideNone)
         self.setWordWrap(False)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.horizontalHeader().setMinimumSectionSize(120)
-        default_row_height = max(int(self.fontMetrics().height() * 3), 34)
+        
+        # 헤더 설정: 마우스 조절 가능하도록 Interactive 모드 적용
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.horizontalHeader().setMinimumSectionSize(100)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        
+        default_row_height = max(int(self.fontMetrics().height() * 2), 30)
         self.verticalHeader().setDefaultSectionSize(default_row_height)
         self.horizontalHeader().setStyleSheet("font-weight: bold;")
         self.verticalHeader().setStyleSheet("font-weight: bold;")
+        
         self.cellChanged.connect(self._on_cell_changed)
         self.dataframe_ref = None
         self.cellDoubleClicked.connect(self._on_cell_double_clicked)
+        
+        # 확대/축소용 폰트 설정 초기화
+        self._zoom_level = 100 
         
         # 컨텍스트 메뉴 설정
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -254,6 +262,43 @@ class EnhancedTableWidget(QTableWidget):
         self.horizontalHeader().customContextMenuRequested.connect(self.show_horizontal_header_context_menu)
         self.verticalHeader().setContextMenuPolicy(Qt.CustomContextMenu)
         self.verticalHeader().customContextMenuRequested.connect(self.show_vertical_header_context_menu)
+
+    def wheelEvent(self, event):
+        """Ctrl + 마우스 휠로 테이블 확대/축소"""
+        if event.modifiers() == Qt.ControlModifier:
+            delta = event.angleDelta().y()
+            old_zoom = self._zoom_level
+            if delta > 0:
+                self._zoom_level += 10
+            else:
+                self._zoom_level -= 10
+            
+            # 확대 범위 제한 (50% ~ 300%)
+            self._zoom_level = max(50, min(self._zoom_level, 300))
+            
+            if old_zoom != self._zoom_level:
+                self.apply_zoom()
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+    def apply_zoom(self):
+        """현재 줌 레벨에 맞춰 폰트 및 크기 조정"""
+        font = self.font()
+        # 기본 폰트 크기 14기준 (initUI에서 설정한 기본값에 맞춤)
+        new_size = max(6, int(14 * (self._zoom_level / 100.0)))
+        font.setPointSize(new_size)
+        self.setFont(font)
+        
+        # 행 높이도 비율에 맞춰 조정
+        new_row_height = max(20, int(34 * (self._zoom_level / 100.0)))
+        self.verticalHeader().setDefaultSectionSize(new_row_height)
+        
+        # 헤더 폰트도 함께 조정
+        h_font = self.horizontalHeader().font()
+        h_font.setPointSize(new_size)
+        self.horizontalHeader().setFont(h_font)
+        self.verticalHeader().setFont(h_font)
 
     def show_cell_context_menu(self, pos):
         menu = QMenu(self)
@@ -320,7 +365,8 @@ class EnhancedTableWidget(QTableWidget):
          self.setRowCount(self.dataframe_ref.shape[0])
          self.setColumnCount(self.dataframe_ref.shape[1])
          self.setHorizontalHeaderLabels(self.dataframe_ref.columns.tolist())
-         self.horizontalHeader().update()
+         
+         # 데이터 채우기 및 정렬 설정
          for r in range(self.dataframe_ref.shape[0]):
              for c in range(self.dataframe_ref.shape[1]):
                  value = self.dataframe_ref.iloc[r, c]
@@ -336,13 +382,25 @@ class EnhancedTableWidget(QTableWidget):
                  else:
                      display_value = str(value) if pd.notna(value) else ""
 
-                 self.setItem(r, c, QTableWidgetItem(display_value))
+                 item = QTableWidgetItem(display_value)
+                 # 가운데 정렬 추가
+                 item.setTextAlignment(Qt.AlignCenter)
+                 self.setItem(r, c, item)
+         
+         # 초기 열 너비 보정 (너무 좁지 않게)
+         for i in range(self.columnCount()):
+             if self.columnWidth(i) < 120:
+                 self.setColumnWidth(i, 150)
+                 
          self.cellChanged.connect(self._on_cell_changed)
 
     def _on_cell_changed(self, row, column):
         """셀 변경 이벤트 - 이미지 열은 표시 텍스트가 아닌 실제 경로만 변경"""
         item = self.item(row, column)
         if item:
+            # 모든 텍스트 가운데 정렬 보장
+            item.setTextAlignment(Qt.AlignCenter)
+            
             # 이미지 열도 사용자가 직접 경로를 수정할 수 있도록 허용 (이전에는 차단됨)
             # 일반 텍스트 열 및 이미지 열 모두 시그널 발생
             self.cellDataChangedSignal.emit(row, column, item.text())
@@ -444,6 +502,7 @@ class EnhancedTableWidget(QTableWidget):
                         
                         # 테이블 위젯 아이템 업데이트
                         new_item = QTableWidgetItem(display_value if display_value else "")
+                        new_item.setTextAlignment(Qt.AlignCenter) # 가운데 정렬 추가
                         self.setItem(target_row, target_col, new_item)
                         
                         # 데이터프레임 업데이트
