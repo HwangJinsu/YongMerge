@@ -1994,7 +1994,6 @@ class MailMergeApp(QMainWindow):
             lang_mgr.get('msg_done'),
             f"{len(valid_images)}개의 이미지가 '{target_field}' 열에 추가되었습니다.\n(행 {start_row+1} ~ {start_row+len(valid_images)})"
         )
-        )
 
     def on_image_cell_double_clicked(self, row, column):
         """이미지 열 셀 더블클릭 시 이미지 파일 선택 다이얼로그"""
