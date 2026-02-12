@@ -243,8 +243,11 @@ class EnhancedTableWidget(QTableWidget):
         
         default_row_height = max(int(self.fontMetrics().height() * 2), 30)
         self.verticalHeader().setDefaultSectionSize(default_row_height)
-        self.horizontalHeader().setStyleSheet("font-weight: bold;")
-        self.verticalHeader().setStyleSheet("font-weight: bold;")
+        # 헤더 폰트 설정 (굵게)
+        h_font = self.horizontalHeader().font()
+        h_font.setBold(True)
+        self.horizontalHeader().setFont(h_font)
+        self.verticalHeader().setFont(h_font)
         
         self.cellChanged.connect(self._on_cell_changed)
         self.dataframe_ref = None
@@ -262,6 +265,9 @@ class EnhancedTableWidget(QTableWidget):
         self.horizontalHeader().customContextMenuRequested.connect(self.show_horizontal_header_context_menu)
         self.verticalHeader().setContextMenuPolicy(Qt.CustomContextMenu)
         self.verticalHeader().customContextMenuRequested.connect(self.show_vertical_header_context_menu)
+        
+        # 초기 스타일 적용
+        self.apply_zoom()
 
     def wheelEvent(self, event):
         """Ctrl + 마우스 휠로 테이블 확대/축소"""
@@ -284,21 +290,29 @@ class EnhancedTableWidget(QTableWidget):
 
     def apply_zoom(self):
         """현재 줌 레벨에 맞춰 폰트 및 크기 조정"""
-        font = self.font()
-        # 기본 폰트 크기 14기준 (initUI에서 설정한 기본값에 맞춤)
+        # 기본 폰트 크기 14기준
         new_size = max(6, int(14 * (self._zoom_level / 100.0)))
+        
+        # 1. 스타일시트를 통해 본문 폰트 크기 강제 적용
+        # QTableWidget 내의 아이템 텍스트 크기를 변경하는 가장 확실한 방법
+        self.setStyleSheet(f"QTableWidget {{ font-size: {new_size}px; }}")
+        
+        # 2. 위젯 폰트 객체 업데이트 (내부 크기 계산용)
+        font = self.font()
         font.setPointSize(new_size)
         self.setFont(font)
         
-        # 행 높이도 비율에 맞춰 조정
+        # 3. 헤더 폰트 크기 및 스타일 명시적 조정
+        header_style = f"font-size: {new_size}px; font-weight: bold;"
+        self.horizontalHeader().setStyleSheet(header_style)
+        self.verticalHeader().setStyleSheet(header_style)
+
+        # 3. 행 높이도 비율에 맞춰 조정
         new_row_height = max(20, int(34 * (self._zoom_level / 100.0)))
         self.verticalHeader().setDefaultSectionSize(new_row_height)
         
-        # 헤더 폰트도 함께 조정
-        h_font = self.horizontalHeader().font()
-        h_font.setPointSize(new_size)
-        self.horizontalHeader().setFont(h_font)
-        self.verticalHeader().setFont(h_font)
+        # 4. 전체 테이블 업데이트 강제 실행
+        self.viewport().update()
 
     def show_cell_context_menu(self, pos):
         menu = QMenu(self)
@@ -595,7 +609,7 @@ class MailMergeApp(QMainWindow):
             QLabel.subtitle {{ font-size: 18px; font-weight: 600; color: #2D2F33; }}
             QLabel {{ font-size: 15px; color: #42454D; }}
             QLineEdit {{ border: 1px solid #C2C7CF; border-radius: 8px; padding: 12px; font-size: 15px; }}
-            QTableWidget {{ background: #FFFFFF; gridline-color: #E1E4E8; font-size: 14px; selection-background-color: #E8F1FF; }}
+            QTableWidget {{ background: #FFFFFF; gridline-color: #E1E4E8; selection-background-color: #E8F1FF; }}
             QTableWidget::item:selected {{ color: #000000; }}
 
             QMenuBar {{
