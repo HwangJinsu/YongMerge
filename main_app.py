@@ -1831,18 +1831,31 @@ class MailMergeApp(QMainWindow):
         self.progress_dialog.setValue(value)
 
     def on_automation_complete(self, message, output_type, output_file):
-        """병합 완료 시 호출되는 콜백
-
-        Args:
-            message: 완료 메시지
-            output_type: 'individual' 또는 'combined'
-            output_file: 통합 파일 경로 (combined인 경우), None이면 개별 파일
-        """
+        """병합 완료 시 호출되는 콜백"""
         self.progress_dialog.setValue(100)
         self.generate_button.setEnabled(True)
 
+        # 메시지 파싱 및 현지화 처리
+        display_msg = message
+        title = lang_mgr.get('msg_done')
+        
+        try:
+            if "|" in message:
+                parts = message.split("|")
+                msg_type = parts[0]
+                path = parts[1]
+                count = parts[2] if len(parts) > 2 else ""
+                
+                doc_ext = os.path.splitext(self.template_file_path)[1].upper()[1:]
+                if msg_type == "INDIVIDUAL_DONE":
+                    display_msg = lang_mgr.get('msg_individual_done').format(doc_ext, path, count)
+                elif msg_type == "COMBINED_DONE":
+                    display_msg = lang_mgr.get('msg_combined_done').format(doc_ext, path, count)
+        except:
+            pass
+
         # 완료 메시지 표시
-        QMessageBox.information(self, "완료", message)
+        QMessageBox.information(self, title, display_msg)
 
         # 통합 파일인 경우 자동으로 열기
         if output_type == 'combined' and output_file and os.path.exists(output_file):
@@ -1890,16 +1903,16 @@ class MailMergeApp(QMainWindow):
         else:
             # 기존 이미지 열이 있는 경우 선택 다이얼로그 표시
             msg_box = QMessageBox(self)
-            msg_box.setWindowTitle("이미지 열 선택")
-            msg_box.setText("이미지를 추가할 열을 선택하거나 새 열을 만드세요.")
+            msg_box.setWindowTitle(lang_mgr.get('msg_select_img_col_title'))
+            msg_box.setText(lang_mgr.get('msg_select_img_col_text'))
             
             # 기존 열들을 버튼으로 추가
             buttons = {}
             for col in image_cols:
-                btn = msg_box.addButton(f"'{col}' 열에 추가", QMessageBox.ActionRole)
+                btn = msg_box.addButton(lang_mgr.get('btn_add_to_col').format(col), QMessageBox.ActionRole)
                 buttons[btn] = col
             
-            new_col_btn = msg_box.addButton("➕ 새 이미지 열 생성", QMessageBox.ActionRole)
+            new_col_btn = msg_box.addButton(lang_mgr.get('btn_new_img_col'), QMessageBox.ActionRole)
             cancel_btn = msg_box.addButton(lang_mgr.get('btn_cancel'), QMessageBox.RejectRole)
             
             msg_box.exec_()
@@ -1992,7 +2005,7 @@ class MailMergeApp(QMainWindow):
         QMessageBox.information(
             self,
             lang_mgr.get('msg_done'),
-            f"{len(valid_images)}개의 이미지가 '{target_field}' 열에 추가되었습니다.\n(행 {start_row+1} ~ {start_row+len(valid_images)})"
+            lang_mgr.get('msg_img_add_summary_new').format(len(valid_images), target_field, start_row + 1, start_row + len(valid_images))
         )
 
     def on_image_cell_double_clicked(self, row, column):

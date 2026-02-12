@@ -156,7 +156,7 @@ def process_individual_word(word, dataframe, template_file_path, progress_callba
             print(f"ERROR: 행 {index+1} 처리 실패: {e}")
             try: doc.Close(0)
             except: pass
-    return f"완료: {output_dir}"
+    return f"INDIVIDUAL_DONE|{output_dir}|{total_rows}"
 
 def process_combined_word(word, dataframe, template_file_path, progress_callback, save_path):
     total_rows = len(dataframe)
@@ -193,6 +193,6 @@ def process_combined_word(word, dataframe, template_file_path, progress_callback
             rng.InsertFile(os.path.abspath(temp_files[i]))
         
         combined_doc.SaveAs(os.path.abspath(save_path))
-        return f"통합 완료: {save_path}"
+        return f"COMBINED_DONE|{save_path}|{len(temp_files)}"
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
