@@ -74,10 +74,10 @@
   "msg_warn_ppt_no_slide": "Төртбұрышты кірістіру үшін слайд табылмады.\n\nСлайдты таңдап, әрекетті қайталаңыз.",
   "msg_warn_ppt_not_running": "PowerPoint іске қосылмаған немесе жауап бермейді.\n\nКелесі қадамдарды орындаңыз:\n1. PowerPoint бағдарламасын іске қосыңыз.\n2. Таныстырылым файлын ашыңыз.\n3. Суретті кірістіргіңіз келетін слайдты таңдаңыз.\n4. Біраз күтіп, 'Сурет' түймесін қайтадан басыңыз.\n5. 'Сурет' түймесін қайтадан басыңыз.",
   "msg_warn_hwp_no_template": "Үлгіге сәйкес келетін HWP құжаты табылмады.",
-  "msg_select_img_col_title": "Select IMAGE Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New IMAGE Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})",
-  "suffix_combined": "Combined"
+  "msg_select_img_col_title": "IMAGE бағанын таңдаңыз",
+  "msg_select_img_col_text": "Суреттерді қосу үшін бағанды таңдаңыз немесе жаңасын жасаңыз.",
+  "btn_add_to_col": "\"{0}\" бағанына қосу",
+  "btn_new_img_col": "➕ Жаңа IMAGE бағанын жасау",
+  "msg_img_add_summary_new": "{0} сурет \"{1}\" бағанына қосылды.\n({2} ~ {3} жолдар)",
+  "suffix_combined": "Біріктірілген"
 }

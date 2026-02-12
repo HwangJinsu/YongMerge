@@ -74,10 +74,10 @@
   "msg_warn_ppt_no_slide": "Kan ikke finde et dias til at indsætte rektanglet.",
   "msg_warn_ppt_not_running": "PowerPoint kører ikke eller svarer ikke.\n\nFølg venligst disse trin:\n1. Start PowerPoint.\n2. Åbn en præsentationsfil.\n3. Vælg det dias, hvor du vil indsætte billedet.\n4. Vent et øjeblik og klik på knappen 'Billede' igen.",
   "msg_warn_hwp_no_template": "Kan ikke finde HWP-dokument, der matcher skabelonen.",
-  "msg_select_img_col_title": "Select IMAGE Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New IMAGE Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})",
-  "suffix_combined": "Combined"
+  "msg_select_img_col_title": "Vælg IMAGE-kolonne",
+  "msg_select_img_col_text": "Vælg en kolonne til at tilføje billeder eller opret en ny.",
+  "btn_add_to_col": "Tilføj til kolonne \"{0}\"",
+  "btn_new_img_col": "➕ Opret ny IMAGE-kolonne",
+  "msg_img_add_summary_new": "{0} billeder er blevet tilføjet til kolonnen \"{1}\".\n(Rækker {2} ~ {3})",
+  "suffix_combined": "Kombineret"
 }

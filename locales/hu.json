@@ -74,10 +74,10 @@
   "msg_warn_ppt_no_slide": "Nem található dia a téglalap beillesztéséhez.\n\nKérjük, válasszon ki egy diát, és próbálja újra.",
   "msg_warn_ppt_not_running": "A PowerPoint nem fut vagy nem válaszol.\n\nKérjük, kövesse az alábbi lépéseket:\n1. Indítsa el a PowerPointot.\n2. Nyisson meg egy bemutatófájlt.\n3. Válassza ki azt a diát, amelyre a képet be szeretné illeszteni.\n4. Várjon egy pillanatot, majd kattintson ismét a 'Kép' gombra.",
   "msg_warn_hwp_no_template": "Nem található a sablonnak megfelelő HWP dokumentum.",
-  "msg_select_img_col_title": "Select IMAGE Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New IMAGE Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})",
-  "suffix_combined": "Combined"
+  "msg_select_img_col_title": "IMAGE oszlop kiválasztása",
+  "msg_select_img_col_text": "Válasszon egy oszlopot a képek hozzáadásához, vagy hozzon létre egy újat.",
+  "btn_add_to_col": "Hozzáadás a(z) \"{0}\" oszlophoz",
+  "btn_new_img_col": "➕ Új IMAGE oszlop létrehozása",
+  "msg_img_add_summary_new": "{0} kép hozzáadva a(z) \"{1}\" oszlophoz.\n({2} ~ {3} sorok)",
+  "suffix_combined": "Kombinált"
 }
