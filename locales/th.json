@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "ไม่พบสไลด์ที่จะแทรกรูปสี่เหลี่ยมผืนผ้า\n\nโปรดเลือกสไลด์แล้วลองอีกครั้ง",
   "msg_warn_ppt_not_running": "PowerPoint ไม่ทำงานหรือไม่มีการตอบสนอง\n\nโปรดทำตามขั้นตอนเหล่านี้:\n1. เปิด PowerPoint\n2. เปิดไฟล์งานนำเสนอ\n3. เลือกสไลด์ที่ต้องการแทรกรูปภาพ\n4. รอสักครู่แล้วคลิกปุ่ม 'รูปภาพ' อีกครั้ง",
   "msg_warn_hwp_no_template": "ไม่พบเอกสาร HWP ที่ตรงกับเทมเพลต",
-  "msg_select_img_col_title": "Select Image Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "msg_select_img_col_title": "เลือกคอลัมน์ IMAGE",
+  "msg_select_img_col_text": "เลือกคอลัมน์เพื่อเพิ่มรูปภาพหรือสร้างใหม่",
+  "btn_add_to_col": "เพิ่มในคอลัมน์ \"{0}\"",
+  "btn_new_img_col": "➕ สร้างคอลัมน์ IMAGE ใหม่",
+  "msg_img_add_summary_new": "เพิ่มรูปภาพ {0} รูปในคอลัมน์ \"{1}\" แล้ว\n(แถว {2} ~ {3})",
+  "suffix_combined": "รวมไฟล์"
 }

@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "आयत डालने के लिए कोई स्लाइड नहीं मिली।\n\nकृपया एक स्लाइड चुनें और पुनः प्रयास करें।",
   "msg_warn_ppt_not_running": "PowerPoint नहीं चल रहा है या जवाब नहीं दे रहा है।\n\nकृपया इन चरणों का पालन करें:\n1. PowerPoint लॉन्च करें।\n2. एक प्रेजेंटेशन फ़ाइल खोलें।\n3. वह स्लाइड चुनें जहाँ आप छवि डालना चाहते हैं।\n4. थोड़ी देर प्रतीक्षा करें और फिर से 'छवि' बटन पर क्लिक करें।",
   "msg_warn_hwp_no_template": "टेम्पलेट से मेल खाने वाला HWP दस्तावेज़ नहीं मिला।",
-  "msg_select_img_col_title": "Select Image Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "msg_select_img_col_title": "IMAGE कॉलम चुनें",
+  "msg_select_img_col_text": "छवियां जोड़ने के लिए एक कॉलम चुनें या नया बनाएं।",
+  "btn_add_to_col": "\"{0}\" कॉलम में जोड़ें",
+  "btn_new_img_col": "➕ नया IMAGE कॉलम बनाएं",
+  "msg_img_add_summary_new": "{0} छवियां \"{1}\" कॉलम में जोड़ दी गई हैं।\n(पंक्तियाँ {2} ~ {3})",
+  "suffix_combined": "संयुक्त"
 }

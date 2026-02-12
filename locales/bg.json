@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "Не може да се намери слайд за вмъкване на правоъгълника.\n\nМоля, изберете слайд и опитайте отново.",
   "msg_warn_ppt_not_running": "PowerPoint не работи или не реагира.\n\nМоля, следвайте тези стъпки:\n1. Стартирайте PowerPoint.\n2. Отворете файл с презентация.\n3. Изберете слайда, където искате да вмъкнете изображението.\n4. Изчакайте малко и кликнете отново върху бутона 'Изображение'.",
   "msg_warn_hwp_no_template": "Не може да се намери HWP документ, съответстващ на шаблона.",
-  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_title": "Select IMAGE Column",
   "msg_select_img_col_text": "Select a column to add images or create a new one.",
   "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "btn_new_img_col": "➕ Create New IMAGE Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})",
+  "suffix_combined": "Combined"
 }

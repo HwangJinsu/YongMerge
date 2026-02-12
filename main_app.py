@@ -22,9 +22,40 @@ from win32com.client import dynamic
 import json
 import os
 
+# --- Settings Management ---
+class SettingsManager:
+    def __init__(self, filename='settings.json'):
+        self.filename = filename
+        self.settings = self.load_settings()
+
+    def load_settings(self):
+        if os.path.exists(self.filename):
+            try:
+                with open(self.filename, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                return {}
+        return {}
+
+    def save_settings(self):
+        try:
+            with open(self.filename, 'w', encoding='utf-8') as f:
+                json.dump(self.settings, f, ensure_ascii=False, indent=2)
+        except:
+            pass
+
+    def get(self, key, default=None):
+        return self.settings.get(key, default)
+
+    def set(self, key, value):
+        self.settings[key] = value
+        self.save_settings()
+
+settings_mgr = SettingsManager()
+
 # --- Language Management ---
 class LanguageManager:
-    def __init__(self, default_lang='ko'):
+    def __init__(self):
         # PyInstaller bundled 환경과 일반 환경 모두 지원
         if hasattr(sys, '_MEIPASS'):
             base_path = sys._MEIPASS
@@ -32,7 +63,11 @@ class LanguageManager:
             base_path = os.path.dirname(os.path.abspath(__file__))
             
         self.locales_dir = os.path.join(base_path, 'locales')
-        self.current_lang = default_lang
+        
+        # 저장된 설정에서 언어 로드, 없으면 'ko' 기본값
+        saved_lang = settings_mgr.get('language', 'ko')
+        self.current_lang = saved_lang
+        
         self.translations = {}
         self.available_languages = {
             'en': 'English',
@@ -71,7 +106,7 @@ class LanguageManager:
             'ur': 'اردو',
             'tr': 'Türkçe'
         }
-        self.load_language(default_lang)
+        self.load_language(saved_lang)
 
     def load_language(self, lang_code):
         if lang_code not in self.available_languages:
@@ -83,6 +118,8 @@ class LanguageManager:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     self.translations = json.load(f)
                 self.current_lang = lang_code
+                # 설정 저장
+                settings_mgr.set('language', lang_code)
             else:
                 # fallback to ko if en also missing
                 if lang_code != 'ko':
@@ -387,7 +424,7 @@ class EnhancedTableWidget(QTableWidget):
                  col_name = self.dataframe_ref.columns[c]
 
                  # 이미지 열인 경우 표시 이름으로 변환
-                 if col_name == "이미지" and pd.notna(value) and str(value).strip():
+                 if (str(col_name).upper().startswith("IMAGE") or str(col_name).startswith("이미지")) and pd.notna(value) and str(value).strip():
                      import image_utils
                      if image_utils.is_image_file(str(value)):
                          display_value = image_utils.get_image_display_name(str(value))
@@ -426,7 +463,8 @@ class EnhancedTableWidget(QTableWidget):
 
         # 이미지 열인지 확인
         col_name = self.horizontalHeaderItem(column).text()
-        if col_name == "이미지":
+        col_name_upper = str(col_name).upper()
+        if col_name_upper.startswith("IMAGE") or col_name == "이미지":
             # 이미지 열은 편집 불가, 대신 이미지 선택 다이얼로그 실행
             item = self.item(row, column)
             if item:
@@ -508,7 +546,8 @@ class EnhancedTableWidget(QTableWidget):
                         display_value = cell_data
                         
                         # 이미지 열 처리
-                        if col_name == "이미지" and actual_value:
+                        col_name_upper = str(col_name).upper()
+                        if (col_name_upper.startswith("IMAGE") or col_name == "이미지") and actual_value:
                             import image_utils
                             # 값이 이미지 파일 경로인 경우 표시 이름 변경
                             if image_utils.is_image_file(actual_value):
@@ -1537,7 +1576,8 @@ class MailMergeApp(QMainWindow):
         col_name = self.dataframe.columns[column]
         
         # 이미지 열의 경우, 표시 텍스트(📷 ...)가 DataFrame에 저장되지 않도록 방어
-        if col_name == "이미지" and isinstance(value, str) and value.startswith("📷 "):
+        col_name_upper = str(col_name).upper()
+        if (col_name_upper.startswith("IMAGE") or col_name == "이미지") and isinstance(value, str) and value.startswith("📷 "):
              # 현재 저장된 값의 표시 이름과 같다면 (즉, 사용자가 내용 변경 없이 엔터만 친 경우) 무시
              current_val = self.dataframe.at[row, col_name]
              if current_val and image_utils.get_image_display_name(current_val) == value:
@@ -1802,8 +1842,8 @@ class MailMergeApp(QMainWindow):
         if output_type == 'combined':
             output_dir = os.path.dirname(self.template_file_path)
             base_name = os.path.splitext(os.path.basename(self.template_file_path))[0]
-            # '통합 파일로 저장' 대신 간결하게 '통합본' 사용
-            suffix = "통합본"
+            # 간결한 접미사 사용 (통합본, Combined 등)
+            suffix = lang_mgr.get('suffix_combined') or "통합본"
             suggested_path = os.path.join(output_dir, f"{base_name}_{suffix}{file_extension}")
             save_path, _ = QFileDialog.getSaveFileName(self, lang_mgr.get('msg_combined_save_title').format(doc_type.upper()), suggested_path, f"{doc_type.upper()} Files (*{file_extension})")
             if not save_path: return
@@ -1892,12 +1932,12 @@ class MailMergeApp(QMainWindow):
     def add_images(self):
         """이미지 파일을 선택하고 시트에 추가합니다."""
         # 1. 대상 열 결정
-        image_cols = [c for f in [self.dataframe.columns] for c in f if str(c).startswith("이미지")]
+        image_cols = [c for f in [self.dataframe.columns] for c in f if str(c).upper().startswith("IMAGE") or str(c).startswith("이미지")]
         target_field = None
 
         if not image_cols:
-            # 이미지 열이 하나도 없으면 새로 생성
-            target_field = "이미지"
+            # 이미지 열이 하나도 없으면 새로 생성 (영문 IMAGE로 고정)
+            target_field = "IMAGE"
             self.save_state()
             self.create_field(field_name=target_field, from_input=False)
         else:
@@ -1921,11 +1961,11 @@ class MailMergeApp(QMainWindow):
             if clicked == cancel_btn:
                 return
             elif clicked == new_col_btn:
-                # 새 열 이름 결정 (이미지2, 이미지3...)
+                # 새 열 이름 결정 (IMAGE2, IMAGE3...)
                 idx = 2
-                while f"이미지{idx}" in self.dataframe.columns:
+                while f"IMAGE{idx}" in self.dataframe.columns:
                     idx += 1
-                target_field = f"이미지{idx}"
+                target_field = f"IMAGE{idx}"
                 self.save_state()
                 self.create_field(field_name=target_field, from_input=False)
             else:
@@ -2049,7 +2089,7 @@ class MailMergeApp(QMainWindow):
     def on_field_button_single_clicked(self, field_name):
         """필드 버튼 싱글클릭 시 {{필드명}} 형식으로 문서에 삽입하고 자동 저장
 
-        PPT에서 '이미지' 필드인 경우: {{이미지}} 텍스트가 포함된 사각형 삽입
+        PPT에서 'IMAGE' 필드인 경우: {{IMAGE}} 텍스트가 포함된 사각형 삽입
         그 외: 일반 텍스트로 {{필드명}} 삽입
         삽입 후 문서 자동 저장
         """
@@ -2087,9 +2127,10 @@ class MailMergeApp(QMainWindow):
             time.sleep(0.5) # 워드가 포커스를 완전히 잡을 때까지 대기
             print(f"DEBUG: {doc_type} 창 활성화 완료")
 
-            # PPT에서 '이미지' 필드인 경우 사각형 삽입
-            if doc_type == 'ppt' and field_name == "이미지":
-                print("DEBUG: PowerPoint 이미지 필드 삽입 시작")
+            # PPT에서 'IMAGE' 필드인 경우 사각형 삽입
+            field_name_upper = str(field_name).upper()
+            if doc_type == 'ppt' and (field_name_upper.startswith("IMAGE") or field_name == "이미지"):
+                print(f"DEBUG: PowerPoint {field_name} 필드 삽입 시작")
 
                 # 방법 1: COM API 시도 (단, 실패 시 방법 2로 폴백)
                 com_success = False
@@ -2097,14 +2138,14 @@ class MailMergeApp(QMainWindow):
                     print("DEBUG: PowerPoint COM 준비 대기 시작 (1.5초)")
                     time.sleep(1.5)
                     print("DEBUG: PowerPoint COM 방식 사각형 삽입 시도")
-                    com_success = self._insert_ppt_image_rectangle()
+                    com_success = self._insert_ppt_image_rectangle(field_name)
                 except Exception as e:
                     print(f"DEBUG: COM 방식 실패: {e}")
 
                 # 방법 2: COM 실패 시 키보드 자동화로 사각형 삽입
                 if not com_success:
                     print("DEBUG: COM 방식 실패, 키보드 자동화 방식으로 전환")
-                    keyboard_success = self._insert_ppt_rectangle_by_keyboard()
+                    keyboard_success = self._insert_ppt_rectangle_by_keyboard(field_name)
                     if keyboard_success:
                         print("DEBUG: 키보드 자동화 방식으로 사각형 삽입 성공")
                         time.sleep(0.3)
@@ -2238,37 +2279,24 @@ class MailMergeApp(QMainWindow):
         except Exception as e:
             print(f"WARNING: Ctrl+S 입력 실패: {e}")
 
-    def _insert_ppt_rectangle_by_keyboard(self):
-        """키보드 자동화로 PowerPoint에 사각형 삽입 (COM 대안)
-
-        PowerPoint에서:
-        1. Alt+N, S, H: 삽입 → 도형 → 사각형 (단축키)
-        2. 마우스 드래그로 사각형 그리기
-        3. 텍스트 입력: {{이미지}}
-
-        Returns:
-            bool: 성공 여부
-        """
+    def _insert_ppt_rectangle_by_keyboard(self, field_name):
+        """키보드 자동화로 PowerPoint에 사각형 삽입 (COM 대안)"""
         try:
-            print("DEBUG: 키보드 자동화로 PPT 사각형 삽입 시작")
-
+            print(f"DEBUG: 키보드 자동화로 PPT 사각형({field_name}) 삽입 시작")
+            placeholder = f"{{{{{field_name}}}}}"
+            
             # PowerPoint 창이 활성화되어 있는 상태에서 시작
             time.sleep(0.5)
 
             # 방법 1: Alt + N (삽입) → S (도형) → H (사각형)
             try:
-                print("DEBUG: PowerPoint 도형 메뉴 접근 시도")
-
-                # ESC로 기존 선택 해제 (2번)
+                # ESC로 기존 선택 해제
                 for _ in range(2):
                     win32api.keybd_event(win32con.VK_ESCAPE, 0, 0, 0)
                     time.sleep(0.05)
                     win32api.keybd_event(win32con.VK_ESCAPE, 0, win32con.KEYEVENTF_KEYUP, 0)
                     time.sleep(0.1)
-                time.sleep(0.3)
-                print("DEBUG: 기존 선택 해제 완료")
-
-                # Alt 키 누르고 바로 N 키 (삽입 탭)
+                
                 win32api.keybd_event(win32con.VK_MENU, 0, 0, 0)
                 time.sleep(0.1)
                 win32api.keybd_event(ord('N'), 0, 0, 0)
@@ -2276,106 +2304,50 @@ class MailMergeApp(QMainWindow):
                 win32api.keybd_event(ord('N'), 0, win32con.KEYEVENTF_KEYUP, 0)
                 time.sleep(0.1)
                 win32api.keybd_event(win32con.VK_MENU, 0, win32con.KEYEVENTF_KEYUP, 0)
-                time.sleep(0.5)  # 삽입 리본이 활성화될 때까지 대기
-                print("DEBUG: 삽입 탭 활성화 완료")
+                time.sleep(0.5)
 
-                # S 키 (도형 메뉴)
                 win32api.keybd_event(ord('S'), 0, 0, 0)
                 time.sleep(0.1)
                 win32api.keybd_event(ord('S'), 0, win32con.KEYEVENTF_KEYUP, 0)
-                time.sleep(0.5)  # 도형 메뉴가 열릴 때까지 대기
-                print("DEBUG: 도형 메뉴 활성화 완료")
+                time.sleep(0.5)
 
-                # H 키 (사각형 선택)
                 win32api.keybd_event(ord('H'), 0, 0, 0)
                 time.sleep(0.1)
                 win32api.keybd_event(ord('H'), 0, win32con.KEYEVENTF_KEYUP, 0)
-                time.sleep(0.6)  # 사각형 커서 모드로 전환될 때까지 충분히 대기
-                print("DEBUG: 사각형 그리기 모드 활성화 완료")
-
+                time.sleep(0.6)
             except Exception as menu_err:
                 print(f"DEBUG: 메뉴 접근 실패: {menu_err}")
                 return False
 
-            # 방법 2: 마우스로 사각형 그리기 (화면 중앙에)
-            # PowerPoint 창의 중심 좌표를 가져와서 사각형 그리기
+            # 방법 2: 마우스로 사각형 그리기
             try:
-                # PowerPoint 창 핸들 찾기
                 ppt_windows = []
                 def enum_callback(hwnd, results):
-                    if win32gui.IsWindowVisible(hwnd):
-                        title = win32gui.GetWindowText(hwnd)
-                        if "PowerPoint" in title:
-                            results.append(hwnd)
+                    if win32gui.IsWindowVisible(hwnd) and "PowerPoint" in win32gui.GetWindowText(hwnd):
+                        results.append(hwnd)
                 win32gui.EnumWindows(enum_callback, ppt_windows)
+                if not ppt_windows: return False
 
-                if not ppt_windows:
-                    print("DEBUG: PowerPoint 창을 찾을 수 없음")
-                    return False
-
-                # 첫 번째 PowerPoint 창의 좌표 가져오기
-                hwnd = ppt_windows[0]
-                rect = win32gui.GetWindowRect(hwnd)
-                left, top, right, bottom = rect
-
-                # 창 중앙 계산
-                center_x = (left + right) // 2
-                center_y = (top + bottom) // 2
-
-                # 사각형 크기 (픽셀)
-                rect_width = 300
-                rect_height = 200
-
-                # 사각형 시작/끝 좌표
-                start_x = center_x - rect_width // 2
-                start_y = center_y - rect_height // 2
-                end_x = center_x + rect_width // 2
-                end_y = center_y + rect_height // 2
-
-                print(f"DEBUG: 사각형 그리기 시작: ({start_x}, {start_y}) → ({end_x}, {end_y})")
-
-                # 마우스 이동 및 드래그
+                rect = win32gui.GetWindowRect(ppt_windows[0])
+                center_x, center_y = (rect[0] + rect[2]) // 2, (rect[1] + rect[3]) // 2
+                
                 import ctypes
-
-                # 시작 위치로 이동
-                ctypes.windll.user32.SetCursorPos(start_x, start_y)
+                ctypes.windll.user32.SetCursorPos(center_x - 150, center_y - 100)
                 time.sleep(0.2)
-                print(f"DEBUG: 마우스 시작 위치 이동 완료: ({start_x}, {start_y})")
-
-                # 마우스 왼쪽 버튼 다운
                 win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
                 time.sleep(0.2)
-                print("DEBUG: 마우스 버튼 다운")
-
-                # 끝 위치로 이동 (천천히)
-                ctypes.windll.user32.SetCursorPos(end_x, end_y)
+                ctypes.windll.user32.SetCursorPos(center_x + 150, center_y + 100)
                 time.sleep(0.3)
-                print(f"DEBUG: 마우스 끝 위치 이동 완료: ({end_x}, {end_y})")
-
-                # 마우스 왼쪽 버튼 업
                 win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
-                time.sleep(0.8)  # 사각형 생성 완료까지 충분히 대기
-
-                print("DEBUG: 사각형 그리기 완료")
-
+                time.sleep(0.8)
             except Exception as draw_err:
                 print(f"DEBUG: 사각형 그리기 실패: {draw_err}")
                 return False
 
             # 방법 3: 사각형에 텍스트 입력
             try:
-                # 사각형을 그리면 자동으로 선택 상태가 됨
-                # 바로 타이핑하거나 F2로 편집 모드 진입
-
-                # "{{이미지}}" 텍스트를 클립보드에 복사
-                text_to_type = "{{이미지}}"
-                QApplication.clipboard().setText(text_to_type)
+                QApplication.clipboard().setText(placeholder)
                 time.sleep(0.2)
-                print(f"DEBUG: 클립보드에 텍스트 복사 완료: {text_to_type}")
-
-                # 사각형이 선택된 상태에서 바로 타이핑 (F2 대신)
-                # 일부 PowerPoint 버전에서는 바로 입력 가능
-                print("DEBUG: 텍스트 붙여넣기 시작")
                 win32api.keybd_event(win32con.VK_CONTROL, 0, 0, 0)
                 time.sleep(0.1)
                 win32api.keybd_event(ord('V'), 0, 0, 0)
@@ -2383,36 +2355,24 @@ class MailMergeApp(QMainWindow):
                 win32api.keybd_event(ord('V'), 0, win32con.KEYEVENTF_KEYUP, 0)
                 time.sleep(0.1)
                 win32api.keybd_event(win32con.VK_CONTROL, 0, win32con.KEYEVENTF_KEYUP, 0)
-                time.sleep(0.5)  # 붙여넣기 완료 대기
+                time.sleep(0.5)
 
-                print("DEBUG: 사각형 텍스트 입력 완료: {{이미지}}")
-
-                # ESC 키로 선택 해제 (2번)
-                print("DEBUG: 편집 모드 종료 및 선택 해제")
                 for _ in range(2):
                     win32api.keybd_event(win32con.VK_ESCAPE, 0, 0, 0)
                     time.sleep(0.1)
                     win32api.keybd_event(win32con.VK_ESCAPE, 0, win32con.KEYEVENTF_KEYUP, 0)
                     time.sleep(0.2)
-
-                print("DEBUG: 사각형 삽입 및 편집 완료")
-
                 return True
-
             except Exception as text_err:
                 print(f"DEBUG: 텍스트 입력 실패: {text_err}")
-                import traceback
-                traceback.print_exc()
                 return False
-
         except Exception as e:
-            print(f"ERROR: 키보드 자동화 사각형 삽입 실패: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"ERROR: 사각형 삽입 실패: {e}")
             return False
 
-    def _insert_ppt_image_rectangle(self):
-        """PowerPoint에 {{이미지}} 텍스트가 포함된 사각형 삽입
+
+    def _insert_ppt_image_rectangle(self, field_name):
+        """PowerPoint에 {{field_name}} 텍스트가 포함된 사각형 삽입
 
         COM 상태 안정화를 위해 재시도 로직 포함
         """
@@ -2423,6 +2383,8 @@ class MailMergeApp(QMainWindow):
             except ImportError:
                 constants = None
 
+            placeholder = f"{{{{{field_name}}}}}"
+            
             # PowerPoint 인스턴스 가져오기 (재시도 로직)
             ppt = None
             max_retries = 3
@@ -2449,13 +2411,8 @@ class MailMergeApp(QMainWindow):
                         # 모든 시도 실패
                         QMessageBox.warning(
                             self,
-                            "경고",
-                            "PowerPoint가 실행되지 않았거나 응답하지 않습니다.\n\n"
-                            "다음 단계를 따라주세요:\n"
-                            "1. PowerPoint를 실행합니다.\n"
-                            "2. 프레젠테이션 파일을 엽니다.\n"
-                            "3. 이미지를 삽입할 슬라이드를 선택합니다.\n"
-                            "4. 잠시 기다린 후 다시 '이미지' 버튼을 클릭합니다."
+                            lang_mgr.get('msg_warning'),
+                            lang_mgr.get('msg_warn_ppt_not_running')
                         )
                         return False
 
@@ -2465,16 +2422,16 @@ class MailMergeApp(QMainWindow):
                 print(f"DEBUG: 활성 슬라이드 확인 실패: {slide_err}")
                 QMessageBox.warning(
                     self,
-                    "경고",
-                    "사각형을 삽입할 슬라이드를 찾을 수 없습니다.\n\n슬라이드를 선택한 뒤 다시 시도해주세요."
+                    lang_mgr.get('msg_warning'),
+                    lang_mgr.get('msg_warn_ppt_no_slide')
                 )
                 return False
 
             if not slide:
                 QMessageBox.warning(
                     self,
-                    "경고",
-                    "사각형을 삽입할 슬라이드를 찾을 수 없습니다.\n\n슬라이드를 선택한 뒤 다시 시도해주세요."
+                    lang_mgr.get('msg_warning'),
+                    lang_mgr.get('msg_warn_ppt_no_slide')
                 )
                 return False
 
@@ -2483,7 +2440,7 @@ class MailMergeApp(QMainWindow):
             print("DEBUG: 사각형 삽입 성공")
 
             # 플레이스홀더 및 스타일 적용
-            shape.TextFrame.TextRange.Text = "{{이미지}}"
+            shape.TextFrame.TextRange.Text = placeholder
             try:
                 shape.Fill.Solid()
                 shape.Fill.ForeColor.RGB = 0xFFFFFF
@@ -2501,7 +2458,7 @@ class MailMergeApp(QMainWindow):
             except Exception as style_err:
                 print(f"DEBUG: 텍스트 정렬 설정 실패 (무시): {style_err}")
 
-            print("DEBUG: PPT에 이미지 사각형 삽입 완료")
+            print(f"DEBUG: PPT에 이미지 사각형({field_name}) 삽입 완료")
             return True  # 성공 시 True 반환
 
         except Exception as e:

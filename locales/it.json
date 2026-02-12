@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "Impossibile trovare una diapositiva per inserire il rettangolo.\n\nSeleziona una diapositiva e riprova.",
   "msg_warn_ppt_not_running": "PowerPoint non è in esecuzione o non risponde.\n\nSegui questi passaggi:\n1. Avvia PowerPoint.\n2. Apri un file di presentazione.\n3. Seleziona la diapositiva in cui vuoi inserire l'immagine.\n4. Attendi un momento e clicca di nuovo sul pulsante 'Immagine'.",
   "msg_warn_hwp_no_template": "Impossibile trovare un documento HWP corrispondente al modello.",
-  "msg_select_img_col_title": "Select Image Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "msg_select_img_col_title": "Seleziona colonna IMAGE",
+  "msg_select_img_col_text": "Seleziona una colonna per aggiungere immagini o creane una nuova.",
+  "btn_add_to_col": "Aggiungi alla colonna \"{0}\"",
+  "btn_new_img_col": "➕ Crea nuova colonna IMAGE",
+  "msg_img_add_summary_new": "{0} immagini sono state aggiunte alla colonna \"{1}\".\n(Righe {2} ~ {3})",
+  "suffix_combined": "Combinato"
 }

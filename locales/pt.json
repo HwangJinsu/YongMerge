@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "Não foi possível encontrar um slide para inserir o retângulo.\n\nSelecione um slide e tente novamente.",
   "msg_warn_ppt_not_running": "O PowerPoint não está em execução ou não está respondendo.\n\nSiga estas etapas:\n1. Inicie o PowerPoint.\n2. Abra um arquivo de apresentação.\n3. Selecione o slide onde deseja inserir a imagem.\n4. Aguarde um momento e clique no botão 'Imagem' novamente.",
   "msg_warn_hwp_no_template": "Não foi possível encontrar o documento HWP correspondente ao modelo.",
-  "msg_select_img_col_title": "Select Image Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "msg_select_img_col_title": "Selecionar coluna IMAGE",
+  "msg_select_img_col_text": "Selecione uma coluna para adicionar imagens ou crie uma nova.",
+  "btn_add_to_col": "Adicionar à coluna \"{0}\"",
+  "btn_new_img_col": "➕ Criar nova coluna IMAGE",
+  "msg_img_add_summary_new": "{0} imagens foram adicionadas à coluna \"{1}\".\n(Linhas {2} ~ {3})",
+  "suffix_combined": "Combinado"
 }

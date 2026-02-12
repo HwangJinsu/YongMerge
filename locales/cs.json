@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "Nelze najít snímek pro vložení obdélníku.\n\nVyberte prosím snímek a zkuste to znovu.",
   "msg_warn_ppt_not_running": "PowerPoint neběží nebo neodpovídá.\n\nPostupujte podle těchto kroků:\n1. Spusťte PowerPoint.\n2. Otevřete soubor prezentace.\n3. Vyberte snímek, do kterého chcete vložit obrázek.\n4. Chvíli počkejte a znovu klikněte na tlačítko 'Obrázek'.",
   "msg_warn_hwp_no_template": "Nelze najít dokument HWP odpovídající šabloně.",
-  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_title": "Select IMAGE Column",
   "msg_select_img_col_text": "Select a column to add images or create a new one.",
   "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "btn_new_img_col": "➕ Create New IMAGE Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})",
+  "suffix_combined": "Combined"
 }

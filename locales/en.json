@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "Cannot find a slide to insert the rectangle.\n\nPlease select a slide and try again.",
   "msg_warn_ppt_not_running": "PowerPoint is not running or not responding.\n\nPlease follow these steps:\n1. Launch PowerPoint.\n2. Open a presentation file.\n3. Select the slide where you want to insert the image.\n4. Wait a moment and click the 'Image' button again.",
   "msg_warn_hwp_no_template": "Cannot find HWP document matching the template.",
-  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_title": "Select IMAGE Column",
   "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to '{0}' column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the '{1}' column.\n(Rows {2} ~ {3})"
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New IMAGE Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})",
+  "suffix_combined": "Combined"
 }

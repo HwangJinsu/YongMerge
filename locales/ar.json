@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "تعذر العثور على شريحة لإدراج المستطيل.\n\nيرجى تحديد شريحة والمحاولة مرة أخرى.",
   "msg_warn_ppt_not_running": "PowerPoint لا يعمل أو لا يستجيب.\n\nيرجى اتباع الخطوات التالية:\n1. قم بتشغيل PowerPoint.\n2. افتح ملف عرض تقديمي.\n3. حدد الشريحة التي تريد إدراج الصورة فيها.\n4. انتظر لحظة وانقر على زر 'صورة' مرة أخرى.",
   "msg_warn_hwp_no_template": "تعذر العثور على مستند HWP مطابق للقالب.",
-  "msg_select_img_col_title": "Select Image Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "msg_select_img_col_title": "اختر عمود IMAGE",
+  "msg_select_img_col_text": "اختر عمودًا لإضافة الصور أو أنشئ عمودًا جديدًا.",
+  "btn_add_to_col": "إضافة إلى عمود \"{0}\"",
+  "btn_new_img_col": "➕ إنشاء عمود IMAGE جديد",
+  "msg_img_add_summary_new": "تم إضافة {0} صورة إلى عمود \"{1}\".\n(الصفوف {2} ~ {3})",
+  "suffix_combined": "مدمج"
 }

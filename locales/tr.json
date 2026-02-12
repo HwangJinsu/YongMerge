@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "Dikdörtgeni eklemek için slayt bulunamadı.\n\nLütfen bir slayt seçin ve tekrar deneyin.",
   "msg_warn_ppt_not_running": "PowerPoint çalışmıyor veya yanıt vermiyor.\n\nLütfen şu adımları izleyin:\n1. PowerPoint'i başlatın.\n2. Bir sunum dosyası açın.\n3. Resmi eklemek istediğiniz slaydı seçin.\n4. Bir süre bekleyin ve tekrar 'Resim' düğmesine tıklayın.",
   "msg_warn_hwp_no_template": "Şablonla eşleşen HWP belgesi bulunamadı.",
-  "msg_select_img_col_title": "Select Image Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "msg_select_img_col_title": "IMAGE Sütununu Seçin",
+  "msg_select_img_col_text": "Resim eklemek için bir sütun seçin veya yeni bir tane oluşturun.",
+  "btn_add_to_col": "\"{0}\" sütununa ekle",
+  "btn_new_img_col": "➕ Yeni IMAGE Sütunu Oluştur",
+  "msg_img_add_summary_new": "{0} resim \"{1}\" sütununa eklendi.\n(Satır {2} ~ {3})",
+  "suffix_combined": "Birleştirilmiş"
 }

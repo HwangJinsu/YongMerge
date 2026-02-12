@@ -74,9 +74,10 @@
   "msg_warn_ppt_no_slide": "Không tìm thấy slide để chèn hình chữ nhật.\n\nVui lòng chọn một slide và thử lại.",
   "msg_warn_ppt_not_running": "PowerPoint không chạy hoặc không phản hồi.\n\nVui lòng làm theo các bước sau:\n1. Chạy PowerPoint.\n2. Mở một tệp thuyết trình.\n3. Chọn slide mà bạn muốn chèn ảnh.\n4. Đợi một lát và nhấp lại vào nút 'Ảnh'.",
   "msg_warn_hwp_no_template": "Không tìm thấy tài liệu HWP khớp với mẫu.",
-  "msg_select_img_col_title": "Select Image Column",
-  "msg_select_img_col_text": "Select a column to add images or create a new one.",
-  "btn_add_to_col": "Add to \"{0}\" column",
-  "btn_new_img_col": "➕ Create New Image Column",
-  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+  "msg_select_img_col_title": "Chọn cột IMAGE",
+  "msg_select_img_col_text": "Chọn một cột để thêm ảnh hoặc tạo cột mới.",
+  "btn_add_to_col": "Thêm vào cột \"{0}\"",
+  "btn_new_img_col": "➕ Tạo cột IMAGE mới",
+  "msg_img_add_summary_new": "{0} ảnh đã được thêm vào cột \"{1}\".\n(Hàng {2} ~ {3})",
+  "suffix_combined": "Đã hợp nhất"
 }
