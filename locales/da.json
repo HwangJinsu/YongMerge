@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "{0} billeder er blevet føjet til feltet '{1}'.\n\nStartrække: {2}\nSlutrække: {3}",
   "msg_warn_ppt_no_slide": "Kan ikke finde et dias til at indsætte rektanglet.",
   "msg_warn_ppt_not_running": "PowerPoint kører ikke eller svarer ikke.\n\nFølg venligst disse trin:\n1. Start PowerPoint.\n2. Åbn en præsentationsfil.\n3. Vælg det dias, hvor du vil indsætte billedet.\n4. Vent et øjeblik og klik på knappen 'Billede' igen.",
-  "msg_warn_hwp_no_template": "Kan ikke finde HWP-dokument, der matcher skabelonen."
+  "msg_warn_hwp_no_template": "Kan ikke finde HWP-dokument, der matcher skabelonen.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

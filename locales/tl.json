@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "{0} (na) larawan ang naidagdag sa field na '{1}'.\n\nSimulang row: {2}\nTapos na row: {3}",
   "msg_warn_ppt_no_slide": "Hindi mahanap ang slide para i-insert ang rectangle.\n\nPumili ng slide at subukan uli.",
   "msg_warn_ppt_not_running": "Hindi tumatakbo o hindi sumasagot ang PowerPoint.\n\nMangyaring sundin ang mga hakbang na ito:\n1. Buksan ang PowerPoint.\n2. Magbukas ng presentation file.\n3. Piliin ang slide kung saan mo gustong i-insert ang larawan.\n4. Maghintay nang sandali at i-click uli ang button na 'Larawan'.",
-  "msg_warn_hwp_no_template": "Hindi mahanap ang HWP na dokumentong tumutugma sa template."
+  "msg_warn_hwp_no_template": "Hindi mahanap ang HWP na dokumentong tumutugma sa template.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

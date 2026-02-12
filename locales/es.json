@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "Se han añadido {0} imágenes al campo '{1}'.\n\nFila inicial: {2}\nFila final: {3}",
   "msg_warn_ppt_no_slide": "No se encuentra una diapositiva para insertar el rectángulo.\n\nPor favor, seleccione una diapositiva e inténtelo de nuevo.",
   "msg_warn_ppt_not_running": "PowerPoint no se está ejecutando o no responde.\n\nPor favor, siga estos pasos:\n1. Inicie PowerPoint.\n2. Abra un archivo de presentación.\n3. Seleccione la diapositiva donde desea insertar la imagen.\n4. Espere un momento y vuelva a hacer clic en el botón 'Imagen'.",
-  "msg_warn_hwp_no_template": "No se encuentra el documento HWP que coincide con la plantilla."
+  "msg_warn_hwp_no_template": "No se encuentra el documento HWP que coincide con la plantilla.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

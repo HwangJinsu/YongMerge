@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "{0} bilder har lagts till i fältet '{1}'.\n\nStartrad: {2}\nSlutrad: {3}",
   "msg_warn_ppt_no_slide": "Kan inte hitta en bild att infoga rektangeln på.\n\nVälj en bild och försök igen.",
   "msg_warn_ppt_not_running": "PowerPoint körs inte eller svarar inte.\n\nFölj dessa steg:\n1. Starta PowerPoint.\n2. Öppna en presentationsfil.\n3. Välj den bild där du vill infoga bilden.\n4. Vänta ett ögonblick och klicka på 'Bild'-knappen igen.",
-  "msg_warn_hwp_no_template": "Kan inte hitta HWP-dokument som matchar mallen."
+  "msg_warn_hwp_no_template": "Kan inte hitta HWP-dokument som matchar mallen.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

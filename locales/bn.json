@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "'{1}' ফিল্ডে {0}টি ছবি যোগ করা হয়েছে।\n\nশুরু সারি: {2}\nশেষ সারি: {3}",
   "msg_warn_ppt_no_slide": "আয়তক্ষেত্র সন্নিবেশ করার জন্য কোনো স্লাইড পাওয়া যায়নি।\n\nঅনুগ্রহ করে একটি স্লাইড নির্বাচন করুন এবং আবার চেষ্টা করুন।",
   "msg_warn_ppt_not_running": "PowerPoint চলছে না বা সাড়া দিচ্ছে না।\n\nঅনুগ্রহ করে নিচের ধাপগুলো অনুসরণ করুন:\n1. PowerPoint চালু করুন।\n2. একটি প্রেজেন্টেশন ফাইল খুলুন।\n3. আপনি যেখানে ছবি সন্নিবেশ করতে চান সেই স্লাইডটি নির্বাচন করুন।\n4. কিছুক্ষণ অপেক্ষা করুন এবং আবার 'Image' বাটনে ক্লিক করুন।",
-  "msg_warn_hwp_no_template": "টেম্পলেটের সাথে মেলে এমন HWP নথি পাওয়া যায়নি।"
+  "msg_warn_hwp_no_template": "টেম্পলেটের সাথে মেলে এমন HWP নথি পাওয়া যায়নি।",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

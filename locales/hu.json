@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "{0} kép hozzáadva a(z) '{1}' mezőhöz.\n\nKezdő sor: {2}\nZáró sor: {3}",
   "msg_warn_ppt_no_slide": "Nem található dia a téglalap beillesztéséhez.\n\nKérjük, válasszon ki egy diát, és próbálja újra.",
   "msg_warn_ppt_not_running": "A PowerPoint nem fut vagy nem válaszol.\n\nKérjük, kövesse az alábbi lépéseket:\n1. Indítsa el a PowerPointot.\n2. Nyisson meg egy bemutatófájlt.\n3. Válassza ki azt a diát, amelyre a képet be szeretné illeszteni.\n4. Várjon egy pillanatot, majd kattintson ismét a 'Kép' gombra.",
-  "msg_warn_hwp_no_template": "Nem található a sablonnak megfelelő HWP dokumentum."
+  "msg_warn_hwp_no_template": "Nem található a sablonnak megfelelő HWP dokumentum.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

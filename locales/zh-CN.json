@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "已将 {0} 张图片添加到“{1}”字段。\n\n起始行：{2}\n结束行：{3}",
   "msg_warn_ppt_no_slide": "找不到用于插入矩形的幻灯片。\n\n请选择幻灯片后重试。",
   "msg_warn_ppt_not_running": "PowerPoint 未运行或无响应。\n\n请按照以下步骤操作：\n1. 启动 PowerPoint。\n2. 打开一个演示文稿文件。\n3. 选择要插入图片的幻灯片。\n4. 等待片刻，然后再次点击“图片”按钮。",
-  "msg_warn_hwp_no_template": "找不到与模板匹配的 HWP 文档。"
-  ,"msg_select_img_col_title": "选择图片列",\n  "msg_select_img_col_text": "选择要添加图片的列或创建新列。",\n  "btn_add_to_col": "添加到 “{0}” 列",\n  "btn_new_img_col": "➕ 创建新图片列",\n  "msg_img_add_summary_new": "已将 {0} 张图片添加到 “{1}” 列。\\n(行 {2} ~ {3})"\n}
+  "msg_warn_hwp_no_template": "找不到与模板匹配的 HWP 文档。",
+  "msg_select_img_col_title": "选择图片列",
+  "msg_select_img_col_text": "选择要添加图片的列或创建新列。",
+  "btn_add_to_col": "添加到 “{0}” 列",
+  "btn_new_img_col": "➕ 创建新图片列",
+  "msg_img_add_summary_new": "已将 {0} 张图片添加到 “{1}” 列。\n(行 {2} ~ {3})"
+}

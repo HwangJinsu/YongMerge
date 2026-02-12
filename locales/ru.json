@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "{0} изображений добавлено в поле '{1}'.\n\nНачальная строка: {2}\nКонечная строка: {3}",
   "msg_warn_ppt_no_slide": "Не удалось найти слайд для вставки прямоугольника.\n\nПожалуйста, выберите слайд и попробуйте снова.",
   "msg_warn_ppt_not_running": "PowerPoint не запущен или не отвечает.\n\nПожалуйста, следуйте этим шагам:\n1. Запустите PowerPoint.\n2. Откройте файл презентации.\n3. Выберите слайд, на который хотите вставить изображение.\n4. Подождите немного и снова нажмите кнопку 'Изображение'.",
-  "msg_warn_hwp_no_template": "Не удалось найти документ HWP, соответствующий шаблону."
+  "msg_warn_hwp_no_template": "Не удалось найти документ HWP, соответствующий шаблону.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

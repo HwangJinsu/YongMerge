@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "{0} Bilder wurden dem Feld '{1}' hinzugefügt.\n\nStartzeile: {2}\nEndzeile: {3}",
   "msg_warn_ppt_no_slide": "Keine Folie zum Einfügen des Rechtecks gefunden.\n\nBitte wählen Sie eine Folie aus und versuchen Sie es erneut.",
   "msg_warn_ppt_not_running": "PowerPoint läuft nicht oder antwortet nicht.\n\nBitte folgen Sie diesen Schritten:\n1. Starten Sie PowerPoint.\n2. Öffnen Sie eine Präsentationsdatei.\n3. Wählen Sie die Folie aus, in die Sie das Bild einfügen möchten.\n4. Warten Sie einen Moment und klicken Sie erneut auf die Schaltfläche 'Bild'.",
-  "msg_warn_hwp_no_template": "Kein HWP-Dokument gefunden, das der Vorlage entspricht."
+  "msg_warn_hwp_no_template": "Kein HWP-Dokument gefunden, das der Vorlage entspricht.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

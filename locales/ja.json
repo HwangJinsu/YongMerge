@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "{0} images have been added to the '{1}' field.\n\nStart row: {2}\nEnd row: {3}",
   "msg_warn_ppt_no_slide": "Cannot find a slide to insert the rectangle.\n\nPlease select a slide and try again.",
   "msg_warn_ppt_not_running": "PowerPoint is not running or not responding.\n\nPlease follow these steps:\n1. Launch PowerPoint.\n2. Open a presentation file.\n3. Select the slide where you want to insert the image.\n4. Wait a moment and click the 'Image' button again.",
-  "msg_warn_hwp_no_template": "Cannot find HWP document matching the template."
-  ,"msg_select_img_col_title": "画像列の選択",\n  "msg_select_img_col_text": "画像を追加する列を選択するか、新しい列を作成してください。",\n  "btn_add_to_col": "'{0}' 列に追加",\n  "btn_new_img_col": "➕ 新しい画像列を作成",\n  "msg_img_add_summary_new": "{0}個の画像が '{1}' 列に追加されました。\\n(行 {2} ~ {3})"\n}
+  "msg_warn_hwp_no_template": "Cannot find HWP document matching the template.",
+  "msg_select_img_col_title": "画像列の選択",
+  "msg_select_img_col_text": "画像を追加する列を選択するか、新しい列を作成してください。",
+  "btn_add_to_col": "\"{0}\" 列に追加",
+  "btn_new_img_col": "➕ 新しい画像列を作成",
+  "msg_img_add_summary_new": "{0}個の画像が \"{1}\" 列に追加されました。\n(行 {2} ~ {3})"
+}

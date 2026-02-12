@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "{0} imej telah ditambahkan pada medan '{1}'.\n\nBaris mula: {2}\nBaris akhir: {3}",
   "msg_warn_ppt_no_slide": "Tidak dapat mencari slaid untuk memasukkan segi empat tepat.\n\nSila pilih slaid dan cuba lagi.",
   "msg_warn_ppt_not_running": "PowerPoint tidak berjalan atau tidak bertindak balas.\n\nSila ikuti langkah-langika berikut:\n1. Lancarkan PowerPoint.\n2. Buka fail persembahan.\n3. Pilih slaid di mana anda ingin memasukkan imej.\n4. Tunggu sebentar dan klik butang 'Imej' sekali lagi.",
-  "msg_warn_hwp_no_template": "Tidak dapat mencari dokumen HWP yang sepadan dengan templat."
+  "msg_warn_hwp_no_template": "Tidak dapat mencari dokumen HWP yang sepadan dengan templat.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

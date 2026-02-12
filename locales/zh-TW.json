@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "已將 {0} 張圖片新增到「{1}」欄位。\n\n起始列：{2}\n結束列：{3}",
   "msg_warn_ppt_no_slide": "找不到用於插入矩形的投影片。\n\n請選擇投影片後重試。",
   "msg_warn_ppt_not_running": "PowerPoint 未執行或無回應。\n\n請按照以下步驟操作：\n1. 啟動 PowerPoint。\n2. 開啟一個簡報檔案。\n3. 選擇要插入圖片的投影片。\n4. 等待片刻，然後再次點擊「圖片」按鈕。",
-  "msg_warn_hwp_no_template": "找不到與範本相匹配的 HWP 文件。"
+  "msg_warn_hwp_no_template": "找不到與範本相匹配的 HWP 文件。",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
 }

@@ -73,5 +73,10 @@
   "msg_info_img_add_summary": "'{1}' maydoniga {0} ta rasm qo'shildi.\n\nBoshlanish qatori: {2}\nOxirgi qator: {3}",
   "msg_warn_ppt_no_slide": "To'rtburchak kiritish uchun slayd topilmadi.\n\nIltimos, slaydni tanlang va qaytadan urunib ko'ring.",
   "msg_warn_ppt_not_running": "PowerPoint ishlamayapti yoki javob bermayapti.\n\nIltimos, quyidagi bosqichlarni bajaring:\n1. PowerPoint-ni ishga tushiring.\n2. Taqdimot faylini oching.\n3. Rasm kiritmoqchi bo'lgan slaydni tanlang.\n4. Biroz kutib, 'Rasm' tugmasini qaytadan bosing.",
-  "msg_warn_hwp_no_template": "Andozaga mos keladigan HWP hujjati topilmadi."
-  ,"msg_select_img_col_title": "Rasm ustunini tanlash",\n  "msg_select_img_col_text": "Rasmlar qo'shiladigan ustunni tanlang yoki yangi ustun yarating.",\n  "btn_add_to_col": "'{0}' ustuniga qo'shish",\n  "btn_new_img_col": "➕ Yangi rasm ustunini yaratish",\n  "msg_img_add_summary_new": "{0} ta rama '{1}' ustuniga qo'shildi.\\n(Qator {2} ~ {3})"\n}
+  "msg_warn_hwp_no_template": "Andozaga mos keladigan HWP hujjati topilmadi.",
+  "msg_select_img_col_title": "Select Image Column",
+  "msg_select_img_col_text": "Select a column to add images or create a new one.",
+  "btn_add_to_col": "Add to \"{0}\" column",
+  "btn_new_img_col": "➕ Create New Image Column",
+  "msg_img_add_summary_new": "{0} images have been added to the \"{1}\" column.\n(Rows {2} ~ {3})"
+}
