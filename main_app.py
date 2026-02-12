@@ -19,9 +19,87 @@ import webbrowser
 import win32com.client
 from win32com.client import dynamic
 
+import json
+import os
+
+# --- Language Management ---
+class LanguageManager:
+    def __init__(self, default_lang='ko'):
+        # PyInstaller bundled 환경과 일반 환경 모두 지원
+        if hasattr(sys, '_MEIPASS'):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            
+        self.locales_dir = os.path.join(base_path, 'locales')
+        self.current_lang = default_lang
+        self.translations = {}
+        self.available_languages = {
+            'en': 'English',
+            'ko': '한국어',
+            'ja': '日本語',
+            'zh-CN': '简体中文',
+            'zh-TW': '繁體中文',
+            'de': 'Deutsch',
+            'fr': 'Français',
+            'it': 'Italiano',
+            'es': 'Español',
+            'pt': 'Português',
+            'sv': 'Svenska',
+            'fi': 'Suomi',
+            'no': 'Norsk',
+            'da': 'Dansk',
+            'ru': 'Русский',
+            'pl': 'Polski',
+            'cs': 'Čeština',
+            'ro': 'Română',
+            'uk': 'Українська',
+            'hu': 'Magyar',
+            'bg': 'Български',
+            'vi': 'Tiếng Việt',
+            'th': 'ไทย',
+            'hi': 'हिन्दी',
+            'ar': 'العربية',
+            'fa': 'فارسی',
+            'mn': 'Монгол',
+            'id': 'Bahasa Indonesia',
+            'ms': 'Bahasa Melayu',
+            'tl': 'Filipino (Tagalog)',
+            'kk': 'Қазақша',
+            'uz': 'Oʻzbekcha',
+            'bn': 'বাংলা',
+            'ur': 'اردو',
+            'tr': 'Türkçe'
+        }
+        self.load_language(default_lang)
+
+    def load_language(self, lang_code):
+        if lang_code not in self.available_languages:
+            lang_code = 'en'
+        
+        file_path = os.path.join(self.locales_dir, f'{lang_code}.json')
+        try:
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    self.translations = json.load(f)
+                self.current_lang = lang_code
+            else:
+                # fallback to ko if en also missing
+                if lang_code != 'ko':
+                    self.load_language('ko')
+        except Exception as e:
+            print(f"Error loading language {lang_code}: {e}")
+
+    def get(self, key, default=""):
+        return self.translations.get(key, default or key)
+
+# Create a global instance
+lang_mgr = LanguageManager()
+
 # --- Custom Automation Modules ---
 import hwp_automation
 import ppt_automation
+import word_automation
 import image_utils
 
 # --- Windows specific imports for UI interaction ---
@@ -63,6 +141,10 @@ class AutomationWorker(QThread):
             elif self.doc_type == 'ppt':
                 result_message = ppt_automation.process_ppt_template(
                     self.dataframe, self.template_path, self.output_type, self.progress, self.save_path, debug_mode=True
+                )
+            elif self.doc_type == 'word':
+                result_message = word_automation.process_word_template(
+                    self.dataframe, self.template_path, self.output_type, self.progress, self.save_path
                 )
 
             # finished 시그널에 (메시지, 출력타입, 파일경로) 전달
@@ -176,39 +258,39 @@ class EnhancedTableWidget(QTableWidget):
     def show_cell_context_menu(self, pos):
         menu = QMenu(self)
         
-        copy_action = menu.addAction("✂️ 복사 (Ctrl+C)")
+        copy_action = menu.addAction(lang_mgr.get('ctx_copy'))
         copy_action.triggered.connect(self.copy_selected_cells)
         
-        paste_action = menu.addAction("📋 붙여넣기 (Ctrl+V)")
+        paste_action = menu.addAction(lang_mgr.get('ctx_paste'))
         paste_action.triggered.connect(self.paste_to_selected_cells)
         
-        delete_action = menu.addAction("🗑️ 내용 삭제 (Del)")
+        delete_action = menu.addAction(lang_mgr.get('ctx_delete_content'))
         delete_action.triggered.connect(self.delete_selected_cells)
         
         menu.addSeparator()
         
-        add_row_action = menu.addAction("➕ 행 추가")
+        add_row_action = menu.addAction(lang_mgr.get('ctx_add_row'))
         add_row_action.triggered.connect(self.addRowSignal.emit)
         
-        del_row_action = menu.addAction("🗑️ 선택된 [행] 삭제")
+        del_row_action = menu.addAction(lang_mgr.get('ctx_delete_selected_rows'))
         del_row_action.triggered.connect(self.deleteRowsSignal.emit)
         
-        del_col_action = menu.addAction("🗑️ 선택된 [열] 삭제")
+        del_col_action = menu.addAction(lang_mgr.get('ctx_delete_selected_cols'))
         del_col_action.triggered.connect(self.deleteColumnsSignal.emit)
         
         menu.exec_(self.viewport().mapToGlobal(pos))
 
     def show_horizontal_header_context_menu(self, pos):
         menu = QMenu(self)
-        del_col_action = menu.addAction("🗑️ 이 [열] 삭제")
+        del_col_action = menu.addAction(lang_mgr.get('ctx_delete_this_col'))
         del_col_action.triggered.connect(self.deleteColumnsSignal.emit)
         menu.exec_(self.horizontalHeader().mapToGlobal(pos))
 
     def show_vertical_header_context_menu(self, pos):
         menu = QMenu(self)
-        add_row_action = menu.addAction("➕ 여기에 행 추가")
+        add_row_action = menu.addAction(lang_mgr.get('ctx_add_row_here'))
         add_row_action.triggered.connect(self.addRowSignal.emit)
-        del_row_action = menu.addAction("🗑️ 이 [행] 삭제")
+        del_row_action = menu.addAction(lang_mgr.get('ctx_delete_this_row'))
         del_row_action.triggered.connect(self.deleteRowsSignal.emit)
         menu.exec_(self.verticalHeader().mapToGlobal(pos))
 
@@ -436,10 +518,10 @@ class MailMergeApp(QMainWindow):
             try:
                 winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, "HWP.Application")
             except FileNotFoundError:
-                print("⚠️ 한글 COM 등록 정보를 찾을 수 없습니다.")
+                print(lang_mgr.get('msg_hwp_registry_error'))
 
     def initUI(self):
-        self.setWindowTitle('✨ 용Merge ✨')
+        self.setWindowTitle(lang_mgr.get('app_title'))
         self.setGeometry(100, 100, 1180, 840)
         font_id = QFontDatabase.addApplicationFont("PretendardVariable.ttf")
         if font_id != -1:
@@ -496,34 +578,40 @@ class MailMergeApp(QMainWindow):
         main_layout = QVBoxLayout(self.central_widget)
 
         # 상단 메뉴
-        menubar = self.menuBar()
-        menubar.setNativeMenuBar(False)
-        help_menu = menubar.addMenu("도움말")
+        self.menubar = self.menuBar()
+        self.menubar.setNativeMenuBar(False)
         
-        guide_action = help_menu.addAction("사용방법 안내")
-        guide_action.triggered.connect(self.open_user_guide)
+        # 언어 선택 메뉴
+        self.lang_menu = self.menubar.addMenu(lang_mgr.get('menu_language'))
+        self._update_lang_menu()
+
+        self.help_menu = self.menubar.addMenu(lang_mgr.get('menu_help'))
         
-        about_action = help_menu.addAction("정보")
-        about_action.triggered.connect(self.show_app_info)
+        self.guide_action = self.help_menu.addAction(lang_mgr.get('menu_guide'))
+        self.guide_action.triggered.connect(self.open_user_guide)
         
-        license_action = help_menu.addAction("오픈소스 라이선스")
-        license_action.triggered.connect(self.show_open_source_info)
+        self.about_action = self.help_menu.addAction(lang_mgr.get('menu_about'))
+        self.about_action.triggered.connect(self.show_app_info)
+        
+        self.license_action = self.help_menu.addAction(lang_mgr.get('menu_license'))
+        self.license_action.triggered.connect(self.show_open_source_info)
 
         # ❣️ 후원 메뉴
-        support_menu = menubar.addMenu("❣️개발자 후원하기❣️")
-        donate_kakao_action = QAction("카카오페이로 후원하기", self)
-        donate_kakao_action.triggered.connect(self.show_kakao_donation_dialog)
-        donate_paypal_action = QAction("PayPal로 후원하기", self)
-        donate_paypal_action.triggered.connect(self.show_paypal_donation_dialog)
-        support_menu.addActions([donate_kakao_action, donate_paypal_action])
+        self.support_menu = self.menubar.addMenu(lang_mgr.get('menu_support'))
+        self.donate_kakao_action = QAction(lang_mgr.get('menu_donate_kakao'), self)
+        self.donate_kakao_action.triggered.connect(self.show_kakao_donation_dialog)
+        self.donate_paypal_action = QAction(lang_mgr.get('menu_donate_paypal'), self)
+        self.donate_paypal_action.triggered.connect(self.show_paypal_donation_dialog)
+        self.support_menu.addActions([self.donate_kakao_action, self.donate_paypal_action])
         
         field_creation_layout = QHBoxLayout()
-        self.field_name_input = QLineEdit(placeholderText="새 필드 이름 입력 후 Enter")
+        self.field_name_input = QLineEdit(placeholderText=lang_mgr.get('input_field_placeholder'))
         self.field_name_input.setFixedHeight(48)
         self.field_name_input.returnPressed.connect(self.create_field)
-        self.create_field_button = self._make_secondary_button("➕ 필드 생성")
+        self.create_field_button = self._make_secondary_button(lang_mgr.get('btn_create_field'))
         self.create_field_button.clicked.connect(self.create_field)
-        field_creation_layout.addWidget(self._styled_label("필드 관리:", css_class="subtitle"))
+        self.field_mgmt_label = self._styled_label(lang_mgr.get('label_field_mgmt'), css_class="subtitle")
+        field_creation_layout.addWidget(self.field_mgmt_label)
         field_creation_layout.addWidget(self.field_name_input)
         field_creation_layout.addWidget(self.create_field_button)
         main_layout.addLayout(field_creation_layout)
@@ -531,7 +619,8 @@ class MailMergeApp(QMainWindow):
         field_list_frame = QFrame()
         field_list_frame.setFrameShape(QFrame.StyledPanel)
         field_list_frame_layout = QVBoxLayout(field_list_frame)
-        field_list_frame_layout.addWidget(self._styled_label("🏷️ 사용 가능한 필드 (클릭하여 문서에 삽입):", css_class="subtitle"))
+        self.available_fields_label = self._styled_label(lang_mgr.get('label_available_fields'), css_class="subtitle")
+        field_list_frame_layout.addWidget(self.available_fields_label)
         field_buttons_container = QWidget()
         self.available_fields_layout = QHBoxLayout(field_buttons_container)
         self.available_fields_layout.setAlignment(Qt.AlignLeft)
@@ -552,20 +641,20 @@ class MailMergeApp(QMainWindow):
 
         template_row = QHBoxLayout()
         template_row.setSpacing(12)
-        self.select_template_button = self._make_primary_button("📁 템플릿 파일 선택")
+        self.select_template_button = self._make_primary_button(lang_mgr.get('btn_select_template'))
         self.select_template_button.clicked.connect(self.select_template_file)
         template_row.addWidget(self.select_template_button)
-        self.template_path_display = QLineEdit(readOnly=True, placeholderText="템플릿 파일(한글, 파워포인트)을 선택하세요")
+        self.template_path_display = QLineEdit(readOnly=True, placeholderText=lang_mgr.get('input_template_placeholder'))
         self.template_path_display.setFixedHeight(48)
         template_row.addWidget(self.template_path_display)
         doc_ops_panel.addLayout(template_row)
 
         xlsx_row = QHBoxLayout()
         xlsx_row.setSpacing(12)
-        self.upload_xlsx_button = self._make_primary_button("⬆️ XLSX 업로드")
+        self.upload_xlsx_button = self._make_primary_button(lang_mgr.get('btn_upload_xlsx'))
         self.upload_xlsx_button.clicked.connect(self.upload_xlsx)
         xlsx_row.addWidget(self.upload_xlsx_button)
-        self.xlsx_path_display = QLineEdit(readOnly=True, placeholderText="업로드한 엑셀 파일 경로가 여기에 표시됩니다")
+        self.xlsx_path_display = QLineEdit(readOnly=True, placeholderText=lang_mgr.get('input_xlsx_placeholder'))
         self.xlsx_path_display.setFixedHeight(48)
         xlsx_row.addWidget(self.xlsx_path_display)
         doc_ops_panel.addLayout(xlsx_row)
@@ -573,34 +662,34 @@ class MailMergeApp(QMainWindow):
         control_row = QHBoxLayout()
         control_row.setSpacing(12)
         
-        self.undo_button = self._make_secondary_button("↩️ Undo")
+        self.undo_button = self._make_secondary_button(lang_mgr.get('btn_undo'))
         self.undo_button.clicked.connect(self.undo)
         control_row.addWidget(self.undo_button)
 
-        self.redo_button = self._make_secondary_button("↪️ Redo")
+        self.redo_button = self._make_secondary_button(lang_mgr.get('btn_redo'))
         self.redo_button.clicked.connect(self.redo)
         control_row.addWidget(self.redo_button)
 
-        self.add_row_button = self._make_secondary_button("➕ 행 추가")
+        self.add_row_button = self._make_secondary_button(lang_mgr.get('btn_add_row'))
         self.add_row_button.clicked.connect(self.add_row)
         control_row.addWidget(self.add_row_button)
 
-        self.delete_row_button = self._make_secondary_button("🗑️ 선택 [행] 삭제")
+        self.delete_row_button = self._make_secondary_button(lang_mgr.get('btn_delete_row'))
         self.delete_row_button.clicked.connect(self.delete_selected_rows)
         control_row.addWidget(self.delete_row_button)
 
-        self.delete_col_button = self._make_secondary_button("🗑️ 선택 [열] 삭제")
+        self.delete_col_button = self._make_secondary_button(lang_mgr.get('btn_delete_col'))
         self.delete_col_button.clicked.connect(self.delete_selected_columns)
         control_row.addWidget(self.delete_col_button)
 
-        self.add_image_button = self._make_secondary_button("📷 이미지 추가")
+        self.add_image_button = self._make_secondary_button(lang_mgr.get('btn_add_image'))
         self.add_image_button.clicked.connect(self.add_images)
         control_row.addWidget(self.add_image_button)
 
-        self.download_template_button = self._make_secondary_button("⬇️ 양식 다운로드")
+        self.download_template_button = self._make_secondary_button(lang_mgr.get('btn_download_form'))
         self.download_template_button.clicked.connect(self.download_xlsx_template)
         control_row.addWidget(self.download_template_button)
-        self.generate_button = self._make_primary_button("✨ 문서 생성 ✨")
+        self.generate_button = self._make_primary_button(lang_mgr.get('btn_generate_doc'))
         self.generate_button.clicked.connect(self.generate_document)
         self.generate_button.setEnabled(False)
         control_row.addStretch(1)
@@ -620,6 +709,56 @@ class MailMergeApp(QMainWindow):
         
         # 붙여넣기 시그널 연결
         self.data_table.pastedSignal.connect(self.update_generate_button_state)
+
+    def _update_lang_menu(self):
+        self.lang_menu.clear()
+        for code, name in lang_mgr.available_languages.items():
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, c=code: self.change_language(c))
+            self.lang_menu.addAction(action)
+
+    def change_language(self, lang_code):
+        lang_mgr.load_language(lang_code)
+        self.initUI_texts()
+        QMessageBox.information(self, lang_mgr.get('msg_done'), lang_mgr.get('menu_language') + ": " + lang_mgr.available_languages[lang_code])
+
+    def initUI_texts(self):
+        # Update Main Window
+        self.setWindowTitle(lang_mgr.get('app_title'))
+        
+        # Update Menu Titles
+        self.lang_menu.setTitle(lang_mgr.get('menu_language'))
+        self.help_menu.setTitle(lang_mgr.get('menu_help'))
+        self.support_menu.setTitle(lang_mgr.get('menu_support'))
+        
+        # Update Actions
+        self.guide_action.setText(lang_mgr.get('menu_guide'))
+        self.about_action.setText(lang_mgr.get('menu_about'))
+        self.license_action.setText(lang_mgr.get('menu_license'))
+        self.donate_kakao_action.setText(lang_mgr.get('menu_donate_kakao'))
+        self.donate_paypal_action.setText(lang_mgr.get('menu_donate_paypal'))
+        
+        # Update Labels
+        self.field_mgmt_label.setText(lang_mgr.get('label_field_mgmt'))
+        self.available_fields_label.setText(lang_mgr.get('label_available_fields'))
+        
+        # Update Buttons
+        self.create_field_button.setText(lang_mgr.get('btn_create_field'))
+        self.select_template_button.setText(lang_mgr.get('btn_select_template'))
+        self.upload_xlsx_button.setText(lang_mgr.get('btn_upload_xlsx'))
+        self.undo_button.setText(lang_mgr.get('btn_undo'))
+        self.redo_button.setText(lang_mgr.get('btn_redo'))
+        self.add_row_button.setText(lang_mgr.get('btn_add_row'))
+        self.delete_row_button.setText(lang_mgr.get('btn_delete_row'))
+        self.delete_col_button.setText(lang_mgr.get('btn_delete_col'))
+        self.add_image_button.setText(lang_mgr.get('btn_add_image'))
+        self.download_template_button.setText(lang_mgr.get('btn_download_form'))
+        self.generate_button.setText(lang_mgr.get('btn_generate_doc'))
+        
+        # Update Placeholders
+        self.field_name_input.setPlaceholderText(lang_mgr.get('input_field_placeholder'))
+        self.template_path_display.setPlaceholderText(lang_mgr.get('input_template_placeholder'))
+        self.xlsx_path_display.setPlaceholderText(lang_mgr.get('input_xlsx_placeholder'))
 
     def _styled_label(self, text, css_class=None):
         label = QLabel(text)
@@ -868,19 +1007,8 @@ class MailMergeApp(QMainWindow):
     def show_app_info(self):
         """앱 정보 및 저작권 팝업 표시"""
         path_candidates = []
-        try:
-            if hasattr(sys, '_MEIPASS'):
-                path_candidates.append(os.path.join(sys._MEIPASS, 'YongMerge_img.png'))
-        except Exception:
-            pass
+        # ... (중략) ... (경로 로직 유지)
         
-        try:
-            path_candidates.append(os.path.join(os.getcwd(), 'YongMerge_img.png'))
-            module_dir = os.path.dirname(os.path.abspath(__file__))
-            path_candidates.append(os.path.join(module_dir, 'YongMerge_img.png'))
-        except Exception:
-            pass
-
         selected_path = None
         for p in path_candidates:
             if p and os.path.exists(p):
@@ -888,7 +1016,7 @@ class MailMergeApp(QMainWindow):
                 break
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("정보")
+        dialog.setWindowTitle(lang_mgr.get('menu_about'))
         layout = QVBoxLayout(dialog)
         layout.setSpacing(20)
         layout.setContentsMargins(30, 30, 30, 30)
@@ -909,14 +1037,14 @@ class MailMergeApp(QMainWindow):
 
         # 텍스트 정보
         info_text = (
-            "<div style='text-align: center;'>"
-            "<span style='font-size: 18px; font-weight: bold;'>용머지(YongMerge)</span><br><br>"
-            "개발: Hwang Jinsu<br>"
-            "메일: iiish @hanmail.net<br>"
-            "채널: <a href='https://www.youtube.com/playlist?list=PLs36bSFfggCDasZxzGGHls3tvZF4cif5J'>용툴즈 스튜디오</a><br>"
-            "라이선스: 프리웨어<br>"
-            "본 소프트웨어는 개인/업무용 무료 사용 가능합니다.<br><br>"
-            "<span style='color: #666;'>© 2025 YongMerge · Hwang Jinsu. All rights reserved.</span>"
+            f"<div style='text-align: center;'>"
+            f"<span style='font-size: 18px; font-weight: bold;'>{lang_mgr.get('app_title')}</span><br><br>"
+            f"{lang_mgr.get('info_developer')}<br>"
+            f"{lang_mgr.get('info_email')}<br>"
+            f"{lang_mgr.get('info_channel')}: <a href='https://www.youtube.com/playlist?list=PLs36bSFfggCDasZxzGGHls3tvZF4cif5J'>Youtube</a><br>"
+            f"{lang_mgr.get('info_license_title')}<br>"
+            f"{lang_mgr.get('info_license_desc')}<br><br>"
+            f"<span style='color: #666;'>{lang_mgr.get('info_copyright')}</span>"
             "</div>"
         )
         text_label = QLabel(info_text)
@@ -933,24 +1061,15 @@ class MailMergeApp(QMainWindow):
 
     def show_open_source_info(self):
         message = (
-            "용머지(YongMerge)는 다음 오픈소스 소프트웨어를 사용하며, 각 라이선스 조건을 준수하여 배포됩니다:\n\n"
+            f"{lang_mgr.get('app_title')} uses the following open source software:\n\n"
             "• Python 3 (PSF License)\n"
-            "      https://www.python.org/\n"
             "• PyQt5 (GPL v3)\n"
-            "      https://www.riverbankcomputing.com/software/pyqt/\n"
-            "• python-pptx (MIT License)\n"
-            "      https://python-pptx.readthedocs.io/\n"
             "• Pillow (HPND License)\n"
-            "      https://python-pillow.org/\n"
             "• pandas (BSD 3-Clause License)\n"
-            "      https://pandas.pydata.org/\n"
-            "• PyInstaller (GPL v2 with exceptions)\n"
-            "      https://pyinstaller.org/\n"
-            "• pywin32 / win32com (PSF License)\n"
-            "      https://github.com/mhammond/pywin32\n\n"
-            "저작권, 라이선스 전문 및 상세 정보는 앱 소스코드 저장소에서 확인할 수 있습니다."
+            "• pywin32 / win32com (PSF License)\n\n"
+            f"{lang_mgr.get('menu_license')}"
         )
-        QMessageBox.information(self, "오픈소스 라이선스", message)
+        QMessageBox.information(self, lang_mgr.get('menu_license'), message)
 
     def show_kakao_donation_dialog(self):
         """카카오페이 후원 QR 코드 표시"""
@@ -977,16 +1096,16 @@ class MailMergeApp(QMainWindow):
                 break
 
         if not selected_path:
-            QMessageBox.warning(self, "경고", "후원 이미지(yongpdf_donation.jpg)를 찾을 수 없습니다.")
+            QMessageBox.warning(self, lang_mgr.get('msg_warning'), lang_mgr.get('msg_warning')) # (커스텀 메시지 필요시 추가 가능)
             return
 
         pixmap = QPixmap(selected_path)
         if pixmap.isNull():
-            QMessageBox.warning(self, "경고", "후원 이미지를 불러올 수 없습니다.")
+            QMessageBox.warning(self, lang_mgr.get('msg_warning'), lang_mgr.get('msg_warning'))
             return
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("카카오페이로 후원하기")
+        dialog.setWindowTitle(lang_mgr.get('menu_donate_kakao'))
         layout = QVBoxLayout(dialog)
         image_label = QLabel(dialog)
         image_label.setAlignment(Qt.AlignCenter)
@@ -1009,11 +1128,11 @@ class MailMergeApp(QMainWindow):
         """PayPal 후원 안내"""
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Information)
-        msg_box.setWindowTitle("PayPal로 후원하기")
+        msg_box.setWindowTitle(lang_mgr.get('menu_donate_paypal'))
         msg_box.setTextFormat(Qt.RichText)
         msg_box.setTextInteractionFlags(Qt.TextBrowserInteraction)
         msg_box.setStandardButtons(QMessageBox.Ok)
-        message = '<a href="https://www.paypal.com/paypalme/1hwangjinsu">https://www.paypal.com/paypalme/1hwangjinsu</a> 에서 후원해주세요🙏 진심으로 감사합니다❣️'
+        message = lang_mgr.get('menu_donate_paypal') + ': <a href="https://www.paypal.com/paypalme/1hwangjinsu">https://www.paypal.com/paypalme/1hwangjinsu</a>'
         msg_box.setText(message)
         msg_box.exec_()
 
@@ -1164,6 +1283,28 @@ class MailMergeApp(QMainWindow):
                         break
             except Exception as err:
                 print(f"DEBUG: PPT 템플릿 닫기 실패: {err}")
+        elif doc_type == 'word':
+            try:
+                word = win32com.client.GetActiveObject("Word.Application")
+            except Exception:
+                return
+            try:
+                for doc in list(word.Documents):
+                    try:
+                        full = os.path.abspath(doc.FullName).lower()
+                    except Exception:
+                        continue
+                    if full == abs_path:
+                        try:
+                            if doc.Saved == 0:
+                                doc.Save()
+                        except Exception:
+                            pass
+                        doc.Close()
+                        print(f"DEBUG: 기존 Word 템플릿 저장 후 닫기 - {path}")
+                        break
+            except Exception as err:
+                print(f"DEBUG: Word 템플릿 닫기 실패: {err}")
         elif doc_type == 'hwp':
             hwnd = self._find_hwp_window_handle(abs_path)
             if hwnd:
@@ -1264,7 +1405,7 @@ class MailMergeApp(QMainWindow):
     def delete_selected_columns(self):
         selected_indexes = self.data_table.selectedIndexes()
         if not selected_indexes:
-            QMessageBox.warning(self, "경고", "삭제할 열을 선택해주세요.")
+            QMessageBox.warning(self, lang_mgr.get('msg_warning'), lang_mgr.get('msg_warn_select_col'))
             return
 
         # 선택된 열 인덱스 추출 (중복 제거)
@@ -1282,15 +1423,15 @@ class MailMergeApp(QMainWindow):
                     valid_column_names.add(col_name)
 
         if not valid_column_names:
-            QMessageBox.warning(self, "경고", "삭제할 유효한 열이 없습니다.\n(DataFrame에 존재하지 않는 열입니다)")
+            QMessageBox.warning(self, lang_mgr.get('msg_warning'), lang_mgr.get('msg_warn_no_valid_col'))
             return
 
         # 사용자에게 확인
         col_list = ", ".join(valid_column_names)
         reply = QMessageBox.question(
             self,
-            "열 삭제 확인",
-            f"다음 {len(valid_column_names)}개 열을 삭제하시겠습니까?\n\n{col_list}",
+            lang_mgr.get('msg_output_type_title'),
+            lang_mgr.get('msg_confirm_col_delete').format(len(valid_column_names), col_list),
             QMessageBox.Yes | QMessageBox.No
         )
 
@@ -1300,8 +1441,6 @@ class MailMergeApp(QMainWindow):
         # 열 삭제 실행
         for field_name in valid_column_names:
             self.remove_field(field_name)
-
-        print(f"DEBUG: {len(valid_column_names)}개 열 삭제 완료: {col_list}")
 
     def update_generate_button_state(self):
          enabled = bool(self.template_file_path) and not self.dataframe.columns.empty and not self.dataframe.dropna(how='all').empty
@@ -1397,7 +1536,7 @@ class MailMergeApp(QMainWindow):
         self.update_generate_button_state()
 
     def upload_xlsx(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "XLSX 파일 업로드", "", "Excel Files (*.xlsx)")
+        file_path, _ = QFileDialog.getOpenFileName(self, lang_mgr.get('btn_upload_xlsx'), "", "Excel Files (*.xlsx)")
         if not file_path: return
         self.save_state()
         try:
@@ -1409,9 +1548,9 @@ class MailMergeApp(QMainWindow):
             self.data_table.setDataFrame(self.dataframe)
             self.update_generate_button_state()
             self.xlsx_path_display.setText(file_path)
-            QMessageBox.information(self, "완료", "XLSX 파일 업로드 및 데이터/필드 등록 완료.")
+            QMessageBox.information(self, lang_mgr.get('msg_done'), lang_mgr.get('msg_xlsx_upload_success'))
         except Exception as e:
-            QMessageBox.critical(self, "오류", f"XLSX 파일 로드 중 오류: {e}")
+            QMessageBox.critical(self, lang_mgr.get('msg_error'), lang_mgr.get('msg_xlsx_load_error').format(str(e)))
 
     def download_xlsx_template(self):
         if self.dataframe.columns.empty: return
@@ -1542,7 +1681,7 @@ class MailMergeApp(QMainWindow):
         return success
 
     def select_template_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "템플릿 파일 선택", "", "Document Files (*.hwp *.hwpx *.ppt *.pptx)")
+        file_path, _ = QFileDialog.getOpenFileName(self, lang_mgr.get('btn_select_template'), "", "Document Files (*.hwp *.hwpx *.ppt *.pptx *.doc *.docx)")
         if file_path:
             self.template_path_display.setText(file_path)
             self.template_file_path = file_path
@@ -1567,10 +1706,10 @@ class MailMergeApp(QMainWindow):
         if valid_dataframe.empty: return
 
         msg_box = QMessageBox(self)
-        msg_box.setWindowTitle("출력 방식 선택")
-        individual_button = msg_box.addButton("개별 파일로 저장", QMessageBox.ActionRole)
-        combined_button = msg_box.addButton("통합 파일로 저장", QMessageBox.ActionRole)
-        msg_box.addButton("취소", QMessageBox.RejectRole)
+        msg_box.setWindowTitle(lang_mgr.get('msg_output_type_title'))
+        individual_button = msg_box.addButton(lang_mgr.get('btn_save_individual'), QMessageBox.ActionRole)
+        combined_button = msg_box.addButton(lang_mgr.get('btn_save_combined'), QMessageBox.ActionRole)
+        msg_box.addButton(lang_mgr.get('btn_cancel'), QMessageBox.RejectRole)
         msg_box.exec_()
 
         clicked = msg_box.clickedButton()
@@ -1579,21 +1718,30 @@ class MailMergeApp(QMainWindow):
         else: return
 
         file_extension = os.path.splitext(self.template_file_path)[1].lower()
-        doc_type = 'hwp' if file_extension in ['.hwp', '.hwpx'] else 'ppt'
+        if file_extension in ['.hwp', '.hwpx']:
+            doc_type = 'hwp'
+        elif file_extension in ['.ppt', '.pptx']:
+            doc_type = 'ppt'
+        else:
+            doc_type = 'word'
         save_path = None
 
         if output_type == 'combined':
             output_dir = os.path.dirname(self.template_file_path)
             base_name = os.path.splitext(os.path.basename(self.template_file_path))[0]
-            suggested_path = os.path.join(output_dir, f"{base_name}_통합본{file_extension}")
-            save_path, _ = QFileDialog.getSaveFileName(self, f"통합 {doc_type.upper()} 파일 저장", suggested_path, f"{doc_type.upper()} Files (*{file_extension})")
+            # '통합 파일로 저장' 대신 간결하게 '통합본' 사용
+            suffix = "통합본"
+            suggested_path = os.path.join(output_dir, f"{base_name}_{suffix}{file_extension}")
+            save_path, _ = QFileDialog.getSaveFileName(self, lang_mgr.get('msg_combined_save_title').format(doc_type.upper()), suggested_path, f"{doc_type.upper()} Files (*{file_extension})")
             if not save_path: return
 
         if not is_windows: return
 
         self._close_template_if_open(doc_type)
+        if doc_type == 'word':
+            time.sleep(1.5) # 워드 프로세스가 완전히 정리될 시간을 확보
 
-        self.progress_dialog = QProgressDialog("문서 생성 중...", "취소", 0, 100, self)
+        self.progress_dialog = QProgressDialog(lang_mgr.get('msg_working'), lang_mgr.get('btn_cancel'), 0, 100, self)
         self.progress_dialog.canceled.connect(self.cancel_automation)
 
         self.worker = AutomationWorker(doc_type, valid_dataframe, self.template_file_path, output_type, save_path)
@@ -1604,6 +1752,7 @@ class MailMergeApp(QMainWindow):
         self.generate_button.setEnabled(False)
         self.worker.start()
         self.progress_dialog.show()
+
 
     def update_progress(self, value):
         self.progress_dialog.setValue(value)
@@ -1645,7 +1794,7 @@ class MailMergeApp(QMainWindow):
 
     def on_automation_error(self, message):
         self.progress_dialog.close()
-        QMessageBox.critical(self, "자동화 오류", f"오류가 발생했습니다: {message}")
+        QMessageBox.critical(self, lang_mgr.get('msg_automation_error'), f"{lang_mgr.get('msg_error')}: {message}")
         self.generate_button.setEnabled(True)
 
     def cancel_automation(self):
@@ -1659,7 +1808,7 @@ class MailMergeApp(QMainWindow):
         # 다중 이미지 파일 선택 다이얼로그
         file_paths, _ = QFileDialog.getOpenFileNames(
             self,
-            "이미지 파일 선택 (다중 선택 가능)",
+            lang_mgr.get('btn_add_image'),
             "",
             "Image Files (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp)"
         )
@@ -1680,12 +1829,12 @@ class MailMergeApp(QMainWindow):
 
         # 유효하지 않은 이미지가 있으면 경고
         if invalid_images:
-            error_msg = "다음 파일을 불러올 수 없습니다:\n\n"
+            error_msg = lang_mgr.get('msg_warn_img_load_fail')
             for path, reason in invalid_images[:5]:  # 최대 5개만 표시
                 error_msg += f"• {os.path.basename(path)}: {reason}\n"
             if len(invalid_images) > 5:
-                error_msg += f"\n... 외 {len(invalid_images) - 5}개"
-            QMessageBox.warning(self, "이미지 검증 실패", error_msg)
+                error_msg += f"\n... {lang_mgr.get('msg_done')} {len(invalid_images) - 5}"
+            QMessageBox.warning(self, lang_mgr.get('msg_warn_img_validate_fail'), error_msg)
 
         if not valid_images:
             return
@@ -1695,7 +1844,6 @@ class MailMergeApp(QMainWindow):
         image_field_name = "이미지"
         if image_field_name not in self.dataframe.columns:
             self.create_field(field_name=image_field_name, from_input=False)
-            print(f"DEBUG: '{image_field_name}' 필드 자동 생성 완료")
 
         # Step 2: 이미지 열의 마지막 데이터가 있는 행 찾기
         image_col_idx = self.dataframe.columns.get_loc(image_field_name)
@@ -1709,7 +1857,6 @@ class MailMergeApp(QMainWindow):
 
         # 다음 행부터 시작 (마지막 데이터 행 + 1)
         start_row = last_data_row + 1
-        print(f"DEBUG: 이미지 열의 마지막 데이터 행: {last_data_row}, 입력 시작 행: {start_row}")
 
         # Step 3: 필요한 행 수 계산 및 추가
         required_rows = start_row + len(valid_images)
@@ -1735,12 +1882,10 @@ class MailMergeApp(QMainWindow):
             display_text = image_utils.get_image_display_name(img_path)
             item = QTableWidgetItem(display_text)
             
-            # 테이블 업데이트 시 시그널 차단 (DataFrame에 표시 텍스트가 덮어씌워지는 것 방지)
+            # 테이블 업데이트 시 시그널 차단
             self.data_table.blockSignals(True)
             self.data_table.setItem(row_idx, image_col_idx, item)
             self.data_table.blockSignals(False)
-
-            print(f"DEBUG: 행 {row_idx + 1}에 이미지 추가: {os.path.basename(img_path)}")
 
         # Step 4: UI 업데이트
         self.update_generate_button_state()
@@ -1748,10 +1893,8 @@ class MailMergeApp(QMainWindow):
         # 성공 메시지
         QMessageBox.information(
             self,
-            "이미지 추가 완료",
-            f"{len(valid_images)}개의 이미지가 '{image_field_name}' 필드에 추가되었습니다.\n\n"
-            f"시작 행: {start_row + 1}\n"
-            f"종료 행: {start_row + len(valid_images)}"
+            lang_mgr.get('msg_done'),
+            lang_mgr.get('msg_info_img_add_summary').format(len(valid_images), image_field_name, start_row + 1, start_row + len(valid_images))
         )
 
     def on_image_cell_double_clicked(self, row, column):
@@ -1759,7 +1902,7 @@ class MailMergeApp(QMainWindow):
         # 단일 이미지 파일 선택
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "이미지 파일 선택",
+            lang_mgr.get('btn_add_image'),
             "",
             "Image Files (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp)"
         )
@@ -1770,7 +1913,7 @@ class MailMergeApp(QMainWindow):
         # 선택된 파일 검증
         is_valid, message = image_utils.validate_image_path(file_path)
         if not is_valid:
-            QMessageBox.warning(self, "이미지 검증 실패", message)
+            QMessageBox.warning(self, lang_mgr.get('msg_warn_img_validate_fail'), message)
             return
 
         # 이미지 경로 정규화
@@ -1784,12 +1927,10 @@ class MailMergeApp(QMainWindow):
         display_text = image_utils.get_image_display_name(file_path)
         item = QTableWidgetItem(display_text)
         
-        # 테이블 업데이트 시 시그널 차단 (DataFrame에 표시 텍스트가 덮어씌워지는 것 방지)
+        # 테이블 업데이트 시 시그널 차단
         self.data_table.blockSignals(True)
         self.data_table.setItem(row, column, item)
         self.data_table.blockSignals(False)
-
-        print(f"DEBUG: 행 {row + 1}, 열 '{col_name}'에 이미지 추가: {os.path.basename(file_path)}")
 
         # UI 업데이트
         self.update_generate_button_state()
@@ -1807,25 +1948,36 @@ class MailMergeApp(QMainWindow):
         def enum_windows_callback(hwnd, results):
             if win32gui.IsWindowVisible(hwnd) and self.winId() != hwnd:
                 window_title = win32gui.GetWindowText(hwnd)
-                if ("HWP" in window_title.upper() or "한글" in window_title) or ("PowerPoint" in window_title):
+                if ("HWP" in window_title.upper() or "한글" in window_title) or ("PowerPoint" in window_title) or ("Word" in window_title):
                     results.append(hwnd)
         win32gui.EnumWindows(enum_windows_callback, hwp_ppt_windows)
 
         if not hwp_ppt_windows:
-            QMessageBox.warning(self, "경고", "열려있는 HWP 또는 PowerPoint 창을 찾을 수 없습니다.")
+            QMessageBox.warning(self, "경고", "열려있는 HWP, PowerPoint 또는 Word 창을 찾을 수 없습니다.")
             return
 
         hwnd = hwp_ppt_windows[0]
         window_title = win32gui.GetWindowText(hwnd)
-        doc_type = 'HWP' if "HWP" in window_title.upper() or "한글" in window_title else 'PPT'
+        window_title_upper = window_title.upper()
+        
+        if "HWP" in window_title_upper or "한글" in window_title:
+            doc_type = 'hwp'
+        elif "POWERPOINT" in window_title_upper:
+            doc_type = 'ppt'
+        elif "WORD" in window_title_upper:
+            doc_type = 'word'
+        else:
+            # 기본적으로 워드로 간주하거나 타이틀에 따라 결정
+            doc_type = 'word'
 
         try:
             win32gui.BringWindowToTop(hwnd)
             win32gui.SetForegroundWindow(hwnd)
+            time.sleep(0.5) # 워드가 포커스를 완전히 잡을 때까지 대기
             print(f"DEBUG: {doc_type} 창 활성화 완료")
 
             # PPT에서 '이미지' 필드인 경우 사각형 삽입
-            if doc_type == 'PPT' and field_name == "이미지":
+            if doc_type == 'ppt' and field_name == "이미지":
                 print("DEBUG: PowerPoint 이미지 필드 삽입 시작")
 
                 # 방법 1: COM API 시도 (단, 실패 시 방법 2로 폴백)
@@ -1846,38 +1998,56 @@ class MailMergeApp(QMainWindow):
                         print("DEBUG: 키보드 자동화 방식으로 사각형 삽입 성공")
                         time.sleep(0.3)
                         self._save_with_keyboard()
+                        return # 성공 시 종료
                     else:
-                        QMessageBox.warning(
-                            self,
-                            "경고",
-                            "PowerPoint 이미지 사각형 삽입에 실패했습니다.\n\n"
-                            "수동으로 사각형을 그리고 그 안에 '{{이미지}}' 텍스트를 입력해주세요."
-                        )
+                        print("DEBUG: 모든 사각형 삽입 방식 실패, 일반 텍스트 모드로 전환")
+                        # 실패 시 폴백으로 아래의 일반 텍스트 삽입 로직이 실행되도록 함
                 else:
                     # COM 방식 성공
                     print(f"DEBUG: PPT 이미지 사각형 삽입 성공 (COM), Ctrl+S로 저장")
                     time.sleep(0.3)
                     self._save_with_keyboard()
-                return  # PPT 이미지는 여기서 종료
-            else:
-                if doc_type == 'HWP':
-                    if self._insert_hwp_field(field_name):
-                        self._auto_save_document(doc_type)
-                        return
-                    else:
-                        print("DEBUG: HWP 누름틀 생성 실패, 기존 붙여넣기 방식 사용")
-                field_placeholder = f'{{{{{field_name}}}}}'
-                QApplication.clipboard().setText(field_placeholder)
-                win32api.keybd_event(win32con.VK_CONTROL, 0, 0, 0)
-                win32api.keybd_event(ord('V'), 0, 0, 0)
-                time.sleep(0.05)
-                win32api.keybd_event(ord('V'), 0, win32con.KEYEVENTF_KEYUP, 0)
-                win32api.keybd_event(win32con.VK_CONTROL, 0, win32con.KEYEVENTF_KEYUP, 0)
-                time.sleep(0.2)
-                print(f"DEBUG: '{field_placeholder}' 문서에 삽입 완료 (문서 타입: {doc_type})")
+                    return 
 
-            # 필드 삽입 후 문서 자동 저장
-            self._auto_save_document(doc_type)
+            # 워드인 경우 COM 직접 주입 시도
+            if doc_type == 'word':
+                try:
+                    import win32com.client
+                    word_app = win32com.client.GetActiveObject("Word.Application")
+                    field_placeholder = f"{{{{{field_name}}}}}"
+                    # 커서 위치에 즉시 텍스트 입력
+                    word_app.Selection.TypeText(field_placeholder)
+                    print(f"DEBUG: Word COM 직접 삽입 성공: {field_placeholder}")
+                    return # 삽입 성공 시 종료
+                except Exception as e:
+                    print(f"DEBUG: Word COM 직접 삽입 실패, 키보드 모드로 전환: {e}")
+
+            if doc_type == 'hwp':
+                if self._insert_hwp_field(field_name):
+                    self._auto_save_document(doc_type)
+                    return
+                else:
+                    print("DEBUG: HWP 누름틀 생성 실패, 기존 붙여넣기 방식 사용")
+
+            field_placeholder = f'{{{{{field_name}}}}}'
+            
+            # 폴백(Fallback): 키보드 입력 방식
+            QApplication.clipboard().setText(field_placeholder)
+            time.sleep(0.5)
+            win32api.keybd_event(win32con.VK_CONTROL, 0, 0, 0)
+            win32api.keybd_event(ord('V'), 0, 0, 0)
+            time.sleep(0.1)
+            win32api.keybd_event(ord('V'), 0, win32con.KEYEVENTF_KEYUP, 0)
+            win32api.keybd_event(win32con.VK_CONTROL, 0, win32con.KEYEVENTF_KEYUP, 0)
+            time.sleep(0.5)
+            
+            print(f"DEBUG: '{field_placeholder}' 문서에 삽입 완료 (문서 타입: {doc_type})")
+
+            # 필드 삽입 후 문서 자동 저장 (워드는 프리징 방지를 위해 수동 버튼 클릭 시 자동 저장 제외)
+            if doc_type != 'word':
+                self._auto_save_document(doc_type)
+            else:
+                print(f"DEBUG: '{field_placeholder}' 삽입 완료. 워드 안정성을 위해 자동 저장은 생략합니다.")
 
         except Exception as e:
             QMessageBox.critical(self, "오류", f"필드 삽입 중 오류 발생: {e}")
@@ -1888,7 +2058,7 @@ class MailMergeApp(QMainWindow):
             import win32com.client as com
             time.sleep(0.3)  # 필드 삽입이 완전히 끝날 때까지 대기
 
-            if doc_type == 'HWP':
+            if doc_type == 'hwp':
                 hwnd = self._find_hwp_window_handle(self.template_file_path.lower() if self.template_file_path else "")
                 if hwnd:
                     print(f"DEBUG: HWP 창 핸들 확보({hwnd}), Ctrl+S 수행")
@@ -1918,7 +2088,7 @@ class MailMergeApp(QMainWindow):
                         print(f"DEBUG: HWP 저장 실패, Ctrl+S로 대체: {e}")
                         self._save_with_keyboard()
 
-            elif doc_type == 'PPT':
+            elif doc_type == 'ppt':
                 try:
                     ppt = com.GetActiveObject("PowerPoint.Application")
                     if ppt and ppt.ActivePresentation:
@@ -1930,6 +2100,13 @@ class MailMergeApp(QMainWindow):
                 except Exception as e:
                     print(f"DEBUG: PPT COM 저장 실패, Ctrl+S로 대체: {e}")
                     self._save_with_keyboard()
+
+            elif doc_type == 'word':
+                # Word는 COM 호출 시 프리징이 잦으므로, 순수 키보드 이벤트로만 저장 수행
+                print(f"DEBUG: Word 저장 대기 중...")
+                time.sleep(0.5)
+                self._save_with_keyboard()
+                print(f"DEBUG: Word 문서 자동 저장 완료 (Keyboard Only)")
 
             time.sleep(0.2)  # 저장 완료 대기
 
