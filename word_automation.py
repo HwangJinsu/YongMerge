@@ -127,12 +127,12 @@ def process_word_template(dataframe, template_file_path, output_type, progress_c
         elif output_type == 'combined':
             return process_combined_word(word, dataframe, template_file_path, progress_callback, save_path)
     finally:
-        if output_type == 'individual' or (output_type == 'combined' and not save_path):
-            try: word.Quit()
-            except: pass
-        else:
-            try: word.Visible = True # 결과물 확인용
-            except: pass
+        # 작업 완료 후 워드 인스턴스 무조건 종료 (파일 잠금 해제 보장)
+        try:
+            word.Quit()
+            time.sleep(0.5)
+        except:
+            pass
 
 def process_individual_word(word, dataframe, template_file_path, progress_callback):
     output_dir = os.path.dirname(template_file_path)
@@ -193,6 +193,7 @@ def process_combined_word(word, dataframe, template_file_path, progress_callback
             rng.InsertFile(os.path.abspath(temp_files[i]))
         
         combined_doc.SaveAs(os.path.abspath(save_path))
+        combined_doc.Close(0)
         return f"COMBINED_DONE|{save_path}|{len(temp_files)}"
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)

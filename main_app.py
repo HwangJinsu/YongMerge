@@ -1396,27 +1396,45 @@ class MailMergeApp(QMainWindow):
             except Exception as err:
                 print(f"DEBUG: PPT 템플릿 닫기 실패: {err}")
         elif doc_type == 'word':
+            # 1. COM을 통한 정상 종료 시도
             try:
                 word = win32com.client.GetActiveObject("Word.Application")
-            except Exception:
-                return
-            try:
-                for doc in list(word.Documents):
-                    try:
-                        full = os.path.abspath(doc.FullName).lower()
-                    except Exception:
-                        continue
-                    if full == abs_path:
+                if word:
+                    for doc in list(word.Documents):
                         try:
-                            if doc.Saved == 0:
-                                doc.Save()
-                        except Exception:
-                            pass
-                        doc.Close()
-                        print(f"DEBUG: 기존 Word 템플릿 저장 후 닫기 - {path}")
-                        break
-            except Exception as err:
-                print(f"DEBUG: Word 템플릿 닫기 실패: {err}")
+                            full = os.path.abspath(doc.FullName).lower()
+                            if full == abs_path:
+                                # 0: wdDoNotSaveChanges. 팝업 방지를 위해 저장하지 않고 닫음
+                                # (필요시 사용자가 미리 저장했을 것이라 가정)
+                                doc.Close(0)
+                                print(f"DEBUG: 기존 Word 템플릿 닫기 완료 - {path}")
+                                break
+                        except:
+                            continue
+            except Exception as e:
+                print(f"DEBUG: Word COM 연결 실패(무시): {e}")
+
+            # 2. 창 핸들을 통한 강제 종료 시도 (COM이 응답하지 않을 경우 대비)
+            try:
+                def find_word_window(target_base_name):
+                    matches = []
+                    def handler(hwnd, extra):
+                        if not win32gui.IsWindowVisible(hwnd): return
+                        title = win32gui.GetWindowText(hwnd).lower()
+                        if target_base_name.lower() in title and "word" in title:
+                            extra.append(hwnd)
+                    win32gui.EnumWindows(handler, matches)
+                    return matches
+
+                base_name = os.path.basename(path)
+                hwnds = find_word_window(base_name)
+                for hwnd in hwnds:
+                    print(f"DEBUG: Word 창 핸들({hwnd})로 닫기 시도")
+                    win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
+                    time.sleep(0.3)
+            except Exception as e:
+                print(f"DEBUG: Word 창 핸들 종료 실패: {e}")
+
         elif doc_type == 'hwp':
             hwnd = self._find_hwp_window_handle(abs_path)
             if hwnd:
